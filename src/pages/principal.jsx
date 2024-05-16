@@ -8,8 +8,6 @@ import Slider from "react-slick";
 import "slick-carousel/slick/slick.css"; 
 import "slick-carousel/slick/slick-theme.css";
 import '../style/principal.css';
-import { collection, getDocs} from 'firebase/firestore' 
-import { db } from '../firebaseConfig/firebase'
 import { Grid, CardActionArea, Card, CardContent, Typography } from '@mui/material';
 
 
