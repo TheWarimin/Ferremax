@@ -1,6 +1,8 @@
+para la base de datos
 
-### `npm start`
+### `py manage.py runserver`
 
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+para la pagina hecha en react
 
+### `npm run start`
 
