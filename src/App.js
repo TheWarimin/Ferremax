@@ -11,6 +11,7 @@ import Carrito from "./pages/carrito";
 import Crud from "./pages/crud";
 import Principal from "./pages/principal";
 import Registro from "./pages/registro";
+import Login from "./pages/login";
 
 import Empleados from "./pages/administracion/empleados";
 import Envios from "./pages/administracion/envios";
@@ -48,6 +49,7 @@ function App() {
                 <Route path="/edit/:id" element={<Edit/>}/>
                 <Route path="/create" element={<Create/>}/>
                 <Route path="/registro" element={<Registro/>}/>
+                <Route path="/login" element={<Login/>}/>
               </Routes>
             </main>
           </div>

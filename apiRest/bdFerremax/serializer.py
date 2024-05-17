@@ -19,12 +19,9 @@ class ProductoSerializer(serializers.ModelSerializer):
 class CustomUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
-        fields = ['username', 'email', 'direccion', 'telefono', 'password']
+        fields = ('id', 'email', 'username', 'password', 'direccion', 'telefono')
         extra_kwargs = {'password': {'write_only': True}}
 
     def create(self, validated_data):
-        password = validated_data.pop('password')
-        user = CustomUser(**validated_data)
-        user.set_password(password)
-        user.save()
+        user = CustomUser.objects.create_user(**validated_data)
         return user

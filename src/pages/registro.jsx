@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import '../style/Registro.css';
 import logo from '../Static/Group-295.png'
+import { useNavigate } from 'react-router-dom';
 
 function Registro() {
     const [username, setUsername] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const navigate = useNavigate();
     const [error, setError] = useState(null);
 
     const handleSubmit = async (event) => {
@@ -36,6 +38,7 @@ function Registro() {
             }
 
             const data = await response.json();
+            navigate('/login');
             console.log('Success:', data);
         } catch (error) {
             setError(error.message);

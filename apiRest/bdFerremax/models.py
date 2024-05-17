@@ -34,6 +34,7 @@ class Producto(models.Model):
         super().save(*args, **kwargs)
 
 class CustomUser(AbstractUser):
+    email = models.EmailField(unique=True)
     direccion = models.CharField(max_length=255, null=True, blank=True)
     telefono = models.CharField(max_length=20, null=True, blank=True)
     groups = models.ManyToManyField(
@@ -57,10 +58,13 @@ class CustomUser(AbstractUser):
         related_query_name="customuser",
     )
 
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['username']
+
     def save(self, *args, **kwargs):
-        self.pk = None
         super().save(*args, **kwargs)
-        Carrito.objects.create(usuario=self)
+        Carrito.objects.get_or_create(usuario=self)
+
 
 class Carrito(models.Model):
     usuario = models.OneToOneField(CustomUser, on_delete=models.CASCADE)

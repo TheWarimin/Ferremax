@@ -1,4 +1,4 @@
-.registro-container {
+.login-container {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -6,9 +6,7 @@
     background-color: #721616;
 }
 
-.registro-form {
-    position: relative;
-    z-index: 2;
+.login-form {
     display: flex;
     flex-direction: column;
     width: 300px;
@@ -18,16 +16,7 @@
     background-color: rgb(43, 40, 40);
 }
 
-.logo {
-    border-radius: 50px;
-    position: absolute;
-    width: 230px;
-    top: calc(50% - 200px); 
-    left: 50%; 
-    transform: translate(-50%, -50%);
-    z-index: 1;
-}
-.registro-form input {
+.login-form input {
     margin-bottom: 10px;
     padding: 10px;
     border-radius: 5px;
@@ -47,5 +36,3 @@
 .submit-button:hover {
     background-color: #0056b3;
 }
-
-
