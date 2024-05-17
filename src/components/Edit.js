@@ -18,7 +18,7 @@ const Edit = () => {
 
     useEffect(() => {
         const fetchProduct = async () => {
-            const response = await axios.get(`http://localhost:8000/producto/Producto/${id}/`);
+            const response = await axios.get(`http://localhost:8000/Producto/${id}/`);
             const product = response.data;
             setName(product.nombre);
             setPrice(product.precio);
@@ -29,12 +29,12 @@ const Edit = () => {
         };
     
         const fetchBrands = async () => {
-            const response = await axios.get('http://localhost:8000/producto/marca/');
+            const response = await axios.get('http://localhost:8000/marca/');
             setBrands(response.data);
         };
     
         const fetchCategories = async () => {
-            const response = await axios.get('http://localhost:8000/producto/Categoria/');
+            const response = await axios.get('http://localhost:8000/Categoria/');
             setCategories(response.data);
         };
     
@@ -67,7 +67,7 @@ const Edit = () => {
             formData.append('imagen', image);
         }
 
-        const response = await axios.put(`http://localhost:8000/producto/Producto/${id}/`, formData);
+        const response = await axios.put(`http://localhost:8000/Producto/${id}/`, formData);
         if (response.status === 200) {
             navigate('/inventario');
         }

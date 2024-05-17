@@ -9,10 +9,10 @@ import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import '../style/principal.css';
 import { Grid, CardActionArea, Card, CardContent, Typography, MenuItem, Select } from '@mui/material';
+import Carrito from './carrito';
 
-
-const ProductCard = ({ product }) => (
-    <Card 
+const ProductCard = ({ product , addToCart}) => (
+    <Card onClick={() => addToCart(product)}
         variant="outlined" 
         sx={{ 
             maxWidth: 300, 
@@ -46,12 +46,13 @@ const Principal = () => {
     const [products, setProducts] = useState([]);
     const [selectedCategory, setSelectedCategory] = useState('');
     const [categories, setCategories] = useState([]);
+    const [cart, setCart] = useState([]);
 
     useEffect(() => {
         const getProducts = async () => {
             try {
-                const response = await axios.get('http://localhost:8000/producto/Producto/');
-                const categoria = await axios.get('http://localhost:8000/producto/Categoria/');
+                const response = await axios.get('http://localhost:8000/Producto/');
+                const categoria = await axios.get('http://localhost:8000/Categoria/');
                 if (response.status === 200) {
                     setProducts(response.data);
                     setCategories(categoria.data);
@@ -63,6 +64,10 @@ const Principal = () => {
     
         getProducts();
     }, []);
+
+    const addToCart = (product) => {
+        setCart(prevCart => [...prevCart, product]);
+    };
 
     const settings = {
         dots: true,
@@ -88,7 +93,7 @@ const Principal = () => {
             <Typography variant="h5" style={{ marginTop: '40px', textAlign: 'center', width: '200px' }}>Productos Nuevos</Typography>
             <Slider {...settings}>
                 {products.map((product) => (
-                    <ProductCard key={product.id} product={product} />
+                    <ProductCard key={product.id} product={product} addToCart={addToCart}/>
                 ))}
             </Slider>
                 
@@ -101,12 +106,15 @@ const Principal = () => {
                 {categories.map((category) => (
                     <MenuItem value={category.id}>{category.nombre}</MenuItem>
                 ))}
-            </Select>   
+            </Select>
+
+            <Carrito cart={cart} /> 
+
             <Typography variant="h5" style={{ marginTop: '40px', textAlign: 'center' }}>Catalogo</Typography>
         
             <Grid container>
                 {products.filter(product => selectedCategory === '' || product.categoria === selectedCategory).map((product) => (
-                    <ProductCard key={product.id} product={product} />
+                    <ProductCard key={product.id} product={product} addToCart={addToCart}/>
                 ))}
             </Grid>
         </div>

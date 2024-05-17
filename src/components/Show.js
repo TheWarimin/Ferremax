@@ -26,9 +26,9 @@ const Show = () => {
 
     const getBrandsAndCategories = async () => {
         try {
-            const brandsResponse = await axios.get('http://localhost:8000/producto/marca/');
+            const brandsResponse = await axios.get('http://localhost:8000/marca/');
             setBrands(brandsResponse.data);
-            const categoriesResponse = await axios.get('http://localhost:8000/producto/Categoria/');
+            const categoriesResponse = await axios.get('http://localhost:8000/Categoria/');
             setCategories(categoriesResponse.data);
         } catch (error) {
             console.error("Error getting brands and categories: ", error);
@@ -37,7 +37,7 @@ const Show = () => {
     
     const addBrand = async () => {
         try {
-            const response = await axios.post('http://localhost:8000/producto/marca/', { nombre: newBrand });
+            const response = await axios.post('http://localhost:8000/marca/', { nombre: newBrand });
             if (response.status === 201) {
                 setNewBrand('');
                 await getBrandsAndCategories();
@@ -49,7 +49,7 @@ const Show = () => {
     
     const deleteBrand = async (id) => {
         try {
-            await axios.delete(`http://localhost:8000/producto/marca/${id}`);
+            await axios.delete(`http://localhost:8000/marca/${id}`);
             await getBrandsAndCategories();
         } catch (error) {
             console.error("Error deleting brand: ", error);
@@ -58,7 +58,7 @@ const Show = () => {
 
     const addCategory = async () => {
         try {
-            const response = await axios.post('http://localhost:8000/producto/Categoria/', { nombre: newCategory });
+            const response = await axios.post('http://localhost:8000/Categoria/', { nombre: newCategory });
             if (response.status === 201) {
                 setNewCategory('');
                 await getBrandsAndCategories();
@@ -70,7 +70,7 @@ const Show = () => {
     
     const deleteCategory = async (id) => {
         try {
-            await axios.delete(`http://localhost:8000/producto/Categoria/${id}`);
+            await axios.delete(`http://localhost:8000/Categoria/${id}`);
             await getBrandsAndCategories();
         } catch (error) {
             console.error("Error deleting category: ", error);
@@ -79,7 +79,7 @@ const Show = () => {
 
     const getProducts = async () => {
         try {
-            const response = await axios.get('http://localhost:8000/producto/Producto/');
+            const response = await axios.get('http://localhost:8000/Producto/');
             if (response.status === 200) {
                 setProducts(response.data);
             }
@@ -90,7 +90,7 @@ const Show = () => {
 
     const getCategories = async () => {
         try {
-            const response = await axios.get('http://localhost:8000/producto/Categoria/');
+            const response = await axios.get('http://localhost:8000/Categoria/');
             if (response.status === 200) {
                 setCategories(response.data);
             }
@@ -101,7 +101,7 @@ const Show = () => {
     
     const getBrands = async () => {
         try {
-            const response = await axios.get('http://localhost:8000/producto/marca/');
+            const response = await axios.get('http://localhost:8000/marca/');
             if (response.status === 200) {
                 setBrands(response.data);
             }
@@ -112,7 +112,7 @@ const Show = () => {
 
     const deleteProduct = async (id) => {
         try {
-            const response = await axios.delete(`http://localhost:8000/producto/Producto/${id}/`);
+            const response = await axios.delete(`http://localhost:8000/Producto/${id}/`);
             if (response.status === 204) {
                 getProducts();
             }

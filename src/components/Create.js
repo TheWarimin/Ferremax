@@ -19,8 +19,8 @@ const Create = () => {
 
     useEffect(() => {
         const fetchBrandsAndCategories = async () => {
-            const brandsResponse = await axios.get('http://localhost:8000/producto/marca/');
-            const categoriesResponse = await axios.get('http://localhost:8000/producto/Categoria/');
+            const brandsResponse = await axios.get('http://localhost:8000/marca/');
+            const categoriesResponse = await axios.get('http://localhost:8000/Categoria/');
             setBrands(brandsResponse.data);
             setCategories(categoriesResponse.data);
         };
@@ -76,7 +76,7 @@ const Create = () => {
               //  categoria: selectedCategory,
               //  imagen: image
             });
-            const response = await axios.post('http://localhost:8000/producto/Producto/', formData);
+            const response = await axios.post('http://localhost:8000/Producto/', formData);
             if (response.status === 201) {
                 navigate('/inventario');
             }
