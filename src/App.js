@@ -6,7 +6,7 @@ import { ColorModeContext, useMode } from "./theme";
 import Navbar from "./global/navbar";
 import Sidebar from "./global/Sidebar";
 import Principal from "./pages/principal";
-import Productos from "./pages/productos";
+import {Productos} from "./pages/productos";
 import Carrito from "./pages/carrito";
 import Crud from "./pages/crud";
 import Registro from "./pages/registro";
@@ -30,20 +30,32 @@ function App() {
   const [carrito, setCarrito] = useState([]);
 
   useEffect(() => {
-    axios.get('http://localhost:8000/carritos/1/')
-      .then(response => {
-        setCarrito(response.data.productos);
-      })
-      .catch(error => {
-        console.error('Error fetching carrito:', error);
-      });
+    const token = localStorage.getItem('token'); // Recupera el token del almacenamiento local
+  
+    axios.get('http://localhost:8000/carritos/1/', {
+      headers: {
+        'Authorization': `Token ${token}` // Usa el token recuperado
+      }
+    })
+    .then(response => {
+      setCarrito(response.data.productos);
+    })
+    .catch(error => {
+      console.error('Error fetching carrito:', error);
+    });
   }, []);
-
+  
   const addToCarrito = (producto) => {
+    const token = localStorage.getItem('token'); // Recupera el token del almacenamiento local
+  
     axios.post('http://localhost:8000/productos-carrito/', {
       carrito: 1, 
       producto: producto.id,
       cantidad: 1
+    }, {
+      headers: {
+        'Authorization': `Token ${token}` // Usa el token recuperado
+      }
     })
     .then(response => {
       setCarrito([...carrito, response.data]);

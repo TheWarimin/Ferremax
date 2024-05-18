@@ -68,7 +68,8 @@ class CustomUser(AbstractUser):
 
 class Carrito(models.Model):
     usuario = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
-    
+    def __str__(self):
+        return self.usuario.email
 
 class ProductoCarrito(models.Model):
     carrito = models.ForeignKey(Carrito, on_delete=models.CASCADE)

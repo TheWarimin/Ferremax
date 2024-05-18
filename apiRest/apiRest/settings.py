@@ -32,6 +32,15 @@ AUTHENTICATION_BACKENDS = ['bdFerremax.backends.EmailBackend']
 
 AUTH_USER_MODEL = 'bdFerremax.CustomUser'
 
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly',
+    ],
+}
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -43,6 +52,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'bdFerremax',
     'rest_framework',
+    'rest_framework.authtoken',
     'corsheaders',
 
 ]
