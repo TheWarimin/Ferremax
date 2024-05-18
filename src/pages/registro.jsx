@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import '../style/Registro.css';
 import logo from '../Static/Group-295.png'
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
 function Registro() {
     const [username, setUsername] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const navigate = useNavigate();
     const [error, setError] = useState(null);
+    const navigate = useNavigate();
 
     const handleSubmit = async (event) => {
         event.preventDefault();
@@ -46,6 +46,10 @@ function Registro() {
         }
     };
 
+    const iraLogin = () => {
+        navigate('/login');
+      };
+
     return (
         <div className="registro-container">
             <img src={logo} alt="Logo" className="logo" />
@@ -55,6 +59,7 @@ function Registro() {
                 <input type="password" value={password} onChange={e => setPassword(e.target.value)} id="password" placeholder="Contraseña" />
                 {error && <p className="error-message">{error}</p>}
                 <input type="submit" value="Registrarse" className="submit-button" />
+                <div style={{ fontSize: 13, textAlign: 'center' }} onClick={iraLogin}>¿Ya tienes una cuenta?</div>
             </form>
         </div>
     );

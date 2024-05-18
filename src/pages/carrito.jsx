@@ -1,18 +1,45 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
-const Carrito = ({ cart }) => {
-    console.log(cart);
-    return (
-        <div>
-            {cart && cart.map((product, index) => (
-                <div key={index}>
-                    <h2>{product.nombre}</h2>
-                    <p>{product.descripcion}</p>
-                    <p>{product.precio}</p>
-                </div>
+const Carrito = ({ carrito }) => {
+  const navigate = useNavigate();
+
+  const comprar = () => {
+    // Aquí podrías enviar una solicitud a un servidor para realizar la compra
+    console.log('Comprando', carrito);
+  };
+
+  const irAProductos = () => {
+    navigate('/');
+  };
+
+  return (
+    <div>
+      {carrito.length === 0 ? (
+        <div onClick={irAProductos}>Agregue Productos</div>
+      ) : (
+        <table>
+          <thead>
+            <tr>
+              <th>Imagen</th>
+              <th>Nombre</th>
+              <th>Precio</th>
+            </tr>
+          </thead>
+          <tbody>
+            {carrito.map((producto, index) => (
+              <tr key={index}>
+                <td><img src={producto.imagen} alt={producto.nombre} style={{ width: '100px', height: '100px' }} /></td>
+                <td>{producto.nombre}</td>
+                <td>{producto.precio}</td>
+              </tr>
             ))}
-        </div>
-    );
+          </tbody>
+        </table>
+      )}
+      <button onClick={comprar}>Comprar</button>
+    </div>
+  );
 };
 
 export default Carrito;

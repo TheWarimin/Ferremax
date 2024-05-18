@@ -1,7 +1,6 @@
 from django.db import models
 from django.utils.crypto import get_random_string
-from django.contrib.auth.models import AbstractUser
-from django.contrib.auth.models import AbstractUser, Group, Permission
+from django.contrib.auth.models import AbstractUser, Group, Permission, BaseUserManager
 from django.utils.translation import gettext_lazy as _
 
 class Marca(models.Model):
@@ -64,10 +63,12 @@ class CustomUser(AbstractUser):
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
         Carrito.objects.get_or_create(usuario=self)
-
+    def __str__(self):
+        return self.email
 
 class Carrito(models.Model):
     usuario = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
+    
 
 class ProductoCarrito(models.Model):
     carrito = models.ForeignKey(Carrito, on_delete=models.CASCADE)
