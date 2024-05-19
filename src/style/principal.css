@@ -1,0 +1,7 @@
+
+.carousel {
+    width: 95%; /* reduce el ancho a la mitad */
+    height: 95%; /* reduce la altura a la mitad */
+    margin: auto; /* centra el carrusel */
+   
+}
