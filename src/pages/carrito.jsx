@@ -1,60 +1,110 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../components/AuthContext';
 import axios from 'axios'; 
 
-const Carrito = ({}) => {
+const Carrito = () => {
   const navigate = useNavigate();
   const [carrito, setCarrito] = useState([]);
-
-  const comprar = () => {
-    console.log('Comprando', carrito);
-  };
+  const token = localStorage.getItem('token');
+  const userEmail = localStorage.getItem('userEmail');
 
   useEffect(() => {
-    const userEmail = localStorage.getItem('userEmail');
-    axios.get(`http://localhost:8000/carritos`)
-      .then(response => {
+    const fetchCarrito = async () => {
+      try {
+        const response = await axios.get('http://localhost:8000/carritos/', {
+          headers: {
+            'Authorization': `Token ${token}`
+          }
+        });
+
         const userCarrito = response.data.find(carrito => carrito.usuario === userEmail);
         if (userCarrito) {
           const productPromises = userCarrito.productos.map(item =>
-            axios.get(`http://localhost:8000/productos/${item.producto}/`)
-              .then(response => ({...response.data, cantidad: item.cantidad}))
+            axios.get(`http://localhost:8000/Producto/${item.producto}/`, {
+              headers: {
+                'Authorization': `Token ${token}`
+              }
+            }).then(response => ({
+              ...response.data, 
+              cantidad: item.cantidad, 
+              productoCarritoId: item.id
+            }))
           );
-          Promise.all(productPromises)
-            .then(productResponses => {
-              const productos = productResponses;
-              setCarrito(productos);
-              console.log('Carrito:', productos);
-            })
-            .catch(error => {
-              console.error('Error obteniendo los productos:', error);
-            });
+          const productos = await Promise.all(productPromises);
+          setCarrito(productos);
         } else {
           console.log('No se encontró un carrito para el usuario:', userEmail);
         }
-      })
-      .catch(error => {
+      } catch (error) {
         console.error('Error obteniendo el carrito:', error);
+      }
+    };
+
+    fetchCarrito();
+  }, [userEmail, token]);
+
+  const actualizarCarrito = async (productoCarritoId, nuevaCantidad, productoId) => {
+    try {
+      const response = await axios.put(`http://localhost:8000/productos-carrito/${productoCarritoId}/`, 
+        { 
+          cantidad: nuevaCantidad,
+          producto: productoCarritoId
+        }, 
+        {
+          headers: {
+            'Authorization': `Token ${token}`
+          }
+        }
+      );
+      console.log('Carrito actualizado:', response.data);
+    } catch (error) {
+      console.error('Error actualizando el carrito:', error);
+    }
+  };
+
+  const eliminarDelCarrito = async (productoCarritoId) => {
+    try {
+      await axios.delete(`http://localhost:8000/productos-carrito/${productoCarritoId}/`, {
+        headers: {
+          'Authorization': `Token ${token}`
+        }
       });
-  }, []);
+      setCarrito(carrito.filter(producto => producto.productoCarritoId !== productoCarritoId));
+      console.log('Producto eliminado del carrito');
+    } catch (error) {
+      console.error('Error eliminando el producto del carrito:', error);
+    }
+  };
+
+  const incrementarCantidad = (productoId) => {
+    const producto = carrito.find(producto => producto.id === productoId);
+    const nuevaCantidad = producto.cantidad + 1;
+    setCarrito(carrito.map(producto => producto.id === productoId ? {...producto, cantidad: nuevaCantidad} : producto));
+    actualizarCarrito(producto.productoCarritoId, nuevaCantidad);
+  };
+
+  const disminuirCantidad = (productoId) => {
+    const producto = carrito.find(producto => producto.id === productoId);
+    if (producto.cantidad > 1) {
+      const nuevaCantidad = producto.cantidad - 1;
+      setCarrito(carrito.map(producto => producto.id === productoId ? {...producto, cantidad: nuevaCantidad} : producto));
+      actualizarCarrito(producto.productoCarritoId, nuevaCantidad);
+    }
+  };
+
+  const eliminarProducto = (productoId) => {
+    const producto = carrito.find(producto => producto.id === productoId);
+    eliminarDelCarrito(producto.productoCarritoId);
+  };
 
   const irAProductos = () => {
     navigate('/');
   };
 
-  const eliminarProducto = (productoId) => {
-    setCarrito(carrito.filter(producto => producto.id !== productoId));
+  const comprar = () => {
+    console.log('Comprando', carrito);
   };
-  
-  const incrementarCantidad = (productoId) => {
-    setCarrito(carrito.map(producto => producto.id === productoId ? {...producto, cantidad: producto.cantidad + 1} : producto));
-  };
-  
-  const disminuirCantidad = (productoId) => {
-    setCarrito(carrito.map(producto => producto.id === productoId && producto.cantidad > 1 ? {...producto, cantidad: producto.cantidad - 1} : producto));
-  };
-  
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       {carrito.length === 0 ? (
@@ -81,7 +131,9 @@ const Carrito = ({}) => {
                   {producto.cantidad}
                   <button onClick={() => incrementarCantidad(producto.id)} style={{ marginLeft: '5px', backgroundColor: '#5cb85c', color: 'white', border: 'none', borderRadius: '4px', padding: '5px 10px' }}>+</button>
                 </td>
-                <td><button onClick={() => eliminarProducto(producto.id)} style={{ backgroundColor: '#d9534f', color: 'white', border: 'none', borderRadius: '4px', padding: '5px 10px' }}>Eliminar</button></td>
+                <td>
+                  <button onClick={() => eliminarProducto(producto.id)} style={{ backgroundColor: '#d9534f', color: 'white', border: 'none', borderRadius: '4px', padding: '5px 10px' }}>Eliminar</button>
+                </td>
               </tr>
             ))}
             <tr>

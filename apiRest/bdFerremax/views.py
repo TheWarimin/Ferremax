@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, action
 from django.contrib.auth import authenticate, login, logout
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authtoken.models import Token
@@ -32,6 +32,18 @@ class CarritoViewSet(viewsets.ModelViewSet):
 class ProductoCarritoViewSet(viewsets.ModelViewSet):
     queryset = ProductoCarrito.objects.all()
     serializer_class = ProductoCarritoSerializer
+
+    @action(detail=True, methods=['put'])
+    def update_quantity(self, request, pk=None):
+        producto_carrito = self.get_object()
+        cantidad = request.data.get('cantidad')
+
+        if cantidad is not None:
+            producto_carrito.cantidad = cantidad
+            producto_carrito.save()
+            return Response({'status': 'cantidad actualizada'})
+        else:
+            return Response({'status': 'cantidad no proporcionada'}, status=status.HTTP_400_BAD_REQUEST)
 
 class ProductoViewSet(viewsets.ModelViewSet):
     queryset = Producto.objects.all()

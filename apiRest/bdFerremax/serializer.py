@@ -32,11 +32,10 @@ class ProductoSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class ProductoCarritoSerializer(serializers.ModelSerializer):
-    producto = serializers.PrimaryKeyRelatedField(queryset=Producto.objects.all())
-
     class Meta:
         model = ProductoCarrito
-        fields = ['carrito', 'cantidad', 'producto']
+        fields = ['id', 'producto', 'cantidad']
+
 
 class CarritoSerializer(serializers.ModelSerializer):
     usuario = serializers.EmailField(source='usuario.email')
