@@ -49,6 +49,7 @@ const Navbar = () => {
     setOpen(false);
     logOut();
     setUserEmail('');
+    navigate('/');
   };
 
   const handleButtonClick = () => {

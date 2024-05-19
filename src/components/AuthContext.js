@@ -26,7 +26,7 @@ export const AuthProvider = ({ children }) => {
     setIsLoggedIn(false);
     setUserEmail('');
     localStorage.removeItem('token')
-    localStorage.setItem('cart', JSON.stringify([]));
+    //localStorage.setItem('cart', JSON.stringify([]));
   };
 
   return (

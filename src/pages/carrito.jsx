@@ -43,8 +43,9 @@ const Carrito = () => {
     fetchCarrito();
   }, [userEmail, token]);
 
-  const actualizarCarrito = async (productoCarritoId, nuevaCantidad, productoId) => {
+  const actualizarCarrito = async (productoCarritoId, nuevaCantidad) => {
     try {
+      console.log('token:', token);
       const response = await axios.put(`http://localhost:8000/productos-carrito/${productoCarritoId}/`, 
         { 
           cantidad: nuevaCantidad,

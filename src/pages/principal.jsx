@@ -65,12 +65,12 @@ const Principal = () => {
             try {
                 const response = await axios.get('http://localhost:8000/Producto/', {
                     headers: {
-                        'Authorization': `Token ${token}` // Usa el token recuperado
+                       // 'Authorization': `Token ${token}` // Usa el token recuperado
                     }
                 });
                 const categoria = await axios.get('http://localhost:8000/Categoria/', {
                     headers: {
-                        'Authorization': `Token ${token}` // Usa el token recuperado
+                      //  'Authorization': `Token ${token}` // Usa el token recuperado
                     }
                 });
                 if (response.status === 200) {
