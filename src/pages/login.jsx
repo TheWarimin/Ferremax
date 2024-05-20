@@ -13,31 +13,42 @@ const Login = () => {
     const navigate = useNavigate();
 
     const handleSubmit = async (event) => {
-      event.preventDefault();
-  
-      try {
-          const response = await fetch('http://localhost:8000/login/', {
-              method: 'POST',
-              headers: {
-                  'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({ email, password }),
-          });
-  
-          if (response.ok) {
-              const data = await response.json();
-              localStorage.setItem('token', data.token); // Guarda el token en el almacenamiento local
-              logIn();
-              setUserEmail(email);
-              navigate('/');
-          } else {
-              setError('Error al iniciar sesión. Por favor, intenta de nuevo.');
-          }
-      } catch (error) {
-          console.error('Error de red:', error);
-          setError('Error de conexión. Por favor, intenta de nuevo.');
-      }
-  };
+        event.preventDefault();
+    
+        try {
+            const response = await fetch('http://localhost:8000/login/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email, password }),
+            });
+    
+            if (response.ok) {
+                const data = await response.json();
+                localStorage.setItem('token', data.token); // Guarda el token en el almacenamiento local
+    
+                // Obtener el ID del usuario
+                const usersResponse = await fetch('http://localhost:8000/usuarios/', {
+                    headers: {
+                        'Authorization': `Token ${data.token}`,
+                    },
+                });
+                const users = await usersResponse.json();
+                const user = users.find(user => user.email === email);
+                localStorage.setItem('user_id', user.id); // Guarda el ID del usuario en el almacenamiento local
+    
+                logIn();
+                setUserEmail(email);
+                navigate('/');
+            } else {
+                setError('Error al iniciar sesión. Por favor, intenta de nuevo.');
+            }
+        } catch (error) {
+            console.error('Error de red:', error);
+            setError('Error de conexión. Por favor, intenta de nuevo.');
+        }
+    };
   
 
     return (

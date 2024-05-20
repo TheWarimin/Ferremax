@@ -115,8 +115,33 @@ const Carrito = () => {
   };
 
   const comprar = () => {
-    console.log('Comprando', carrito);
-  };
+    const user_id = localStorage.getItem('user_id');  // Obtener el ID del usuario del localStorage
+    const products = carrito.map(producto => ({id: producto.id, quantity: producto.cantidad}));  // Crear una lista de productos con 'id' y 'quantity'
+    const return_url = 'http://localhost:3000/webpay/return/';  // URL de retorno después de la compra
+
+    fetch('http://localhost:8000/webpay/', {  // Reemplaza esta URL con la URL de tu vista `WebpayView`
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Token ${token}`  // Enviar el token en el encabezado de la solicitud
+        },
+        body: JSON.stringify({
+            user_id: user_id,
+            amount: totalCLP,
+            products: products,
+            return_url: return_url 
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('Success:', data);
+        // Redirigir al usuario a la página de pago con el token
+        window.location.href = `https://webpay.example.com/pay?token=${data.token}`;
+    })
+    .catch((error) => {
+        console.error('Error:', error);
+    });
+};
 
   const totalCLP = carrito.reduce((total, producto) => total + producto.precio * producto.cantidad, 0);
   const totalUSD = dollarValue ? (totalCLP / dollarValue).toFixed(2) : 'Calculando...';
@@ -124,48 +149,37 @@ const Carrito = () => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       {carrito.length === 0 ? (
-        <div onClick={irAProductos}>Agregue Productos</div>
+        <p>No hay productos en el carrito.</p>
       ) : (
-        <table style={{ margin: 'auto', textAlign: 'center', border: '1px solid black' }}>
-          <thead>
-            <tr>
-              <th>Imagen</th>
-              <th>Nombre</th>
-              <th>Precio</th>
-              <th>Cantidad</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {carrito.map((producto, index) => (
-              <tr key={index}>
-                <td><img src={producto.imagen} alt={producto.nombre} style={{ width: '100px', height: '100px' }} /></td>
-                <td>{producto.nombre}</td>
-                <td>{producto.precio}</td>
-                <td>
-                  <button onClick={() => disminuirCantidad(producto.id)} style={{ marginRight: '5px', backgroundColor: '#f0ad4e', color: 'white', border: 'none', borderRadius: '4px', padding: '5px 10px' }}>-</button>
-                  {producto.cantidad}
-                  <button onClick={() => incrementarCantidad(producto.id)} style={{ marginLeft: '5px', backgroundColor: '#5cb85c', color: 'white', border: 'none', borderRadius: '4px', padding: '5px 10px' }}>+</button>
-                </td>
-                <td>
-                  <button onClick={() => eliminarProducto(producto.id)} style={{ backgroundColor: '#d9534f', color: 'white', border: 'none', borderRadius: '4px', padding: '5px 10px' }}>Eliminar</button>
-                </td>
-              </tr>
-            ))}
-            <tr>
-              <td colSpan="4">Total en CLP</td>
-              <td>{totalCLP}</td>
-            </tr>
-            <tr>
-              <td colSpan="4">Total en USD</td>
-              <td>{totalUSD}</td>
-            </tr>
-          </tbody>
-        </table>
+        <ul>
+          {carrito.map(producto => (
+            <li key={producto.id}>
+              <div style={{ display: 'flex', alignItems: 'center' }}>
+                <div>
+                  <img src={producto.imagen} alt={producto.nombre} width="50" height="50" />
+                </div>
+                <div style={{ marginLeft: '10px' }}>
+                  <h4>{producto.nombre}</h4>
+                  <p>Cantidad: {producto.cantidad}</p>
+                  <p>Precio: {producto.precio}</p>
+                  <div style={{ display: 'flex', alignItems: 'center' }}>
+                    <button onClick={() => incrementarCantidad(producto.id)}>+</button>
+                    <button onClick={() => disminuirCantidad(producto.id)}>-</button>
+                    <button onClick={() => eliminarProducto(producto.id)}>Eliminar</button>
+                  </div>
+                </div>
+              </div>
+            </li>
+          ))}
+        </ul>
       )}
-      <button onClick={comprar} style={{ marginTop: '20px', padding: '10px 20px', fontSize: '16px', borderRadius: '5px', backgroundColor: '#007BFF', color: 'white', border: 'none', cursor: 'pointer' }}>Comprar</button>
+      <div>
+        <h3>Total: {totalCLP} CLP / {totalUSD} USD</h3>
+        <button onClick={comprar}>Comprar</button>
+      </div>
+      <button onClick={irAProductos}>Volver a productos</button>
     </div>
   );
-}
+};
 
 export default Carrito;

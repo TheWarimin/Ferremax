@@ -4,13 +4,60 @@ from django.contrib.auth import authenticate, login, logout
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authtoken.models import Token
 from rest_framework import viewsets, generics
-from .serializer import MarcaSerializer, CategoriaSerializer, ProductoSerializer, CustomUserSerializer, CarritoSerializer, ProductoCarritoSerializer, ProductoSerializer
-from .models import Marca, Categoria, Producto, CustomUser, Carrito, ProductoCarrito
+from .serializer import MarcaSerializer, CustomUserSerializer, CategoriaSerializer, ProductoSerializer, CustomUserSerializer, CarritoSerializer, ProductoCarritoSerializer, ProductoSerializer
+from .models import Marca, CustomUser, Categoria, Producto, CustomUser, Carrito, ProductoCarrito, WebpayTransaction, WebpayTransactionItem
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny
+from django.http import HttpResponseRedirect
+from transbank.webpay.webpay_plus.transaction import Transaction
+
+class WebpayView(APIView):
+    def post(self, request, *args, **kwargs):
+        data = request.data
+        buy_order = data.get('buy_order')
+        session_id = data.get('session_id')
+        amount = data.get('amount')
+        return_url = data.get('return_url')  # Extraer return_url del cuerpo de la solicitud
+        products = data.get('products')  # Extraer la lista de productos de la solicitud
+
+        if not return_url:
+            return Response({'error': 'return_url is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            response = Transaction.create(buy_order, session_id, amount, return_url)  # Pasar return_url a Transaction.create()
+        except TypeError as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Crear una nueva transacción Webpay en la base de datos
+        transaction = WebpayTransaction.objects.create(token=response['token'], amount=amount, user_id=data.get('user_id'))
+        
+        # Procesar cada producto en la lista de productos
+        for item in products:
+            product = Producto.objects.get(id=item['id'])
+            quantity = item['quantity']
+            WebpayTransactionItem.objects.create(transaction=transaction, product=product, quantity=quantity)
+        
+        return Response({'token': response['token']})
+
+    def get(self, request, *args, **kwargs):
+        token = request.GET.get('token_ws')  # Obtener el token de la solicitud
+        transaction = WebpayTransaction.objects.get(token=token)  # Buscar la transacción por el token
+        response = Transaction.commit(token)  # Hacer commit de la transacción con el token
+        # Aquí puedes manejar la respuesta de la transacción (por ejemplo, redirigir al usuario a una página de confirmación)
+        return Response({'status': response.status, 'amount': transaction.amount})
+
+class WebpayReturnView(APIView):
+    def post(self, request, *args, **kwargs):
+        token = request.data.get('token_ws')
+        response = Transaction.commit(token)
+        if response.status == 'AUTHORIZED':
+            return Response({"detail": "Transacción autorizada."}, status=status.HTTP_200_OK)
+        else:
+            return Response({"detail": "Transacción no autorizada."}, status=status.HTTP_400_BAD_REQUEST)
+
 
 class MarcaViewSet(viewsets.ModelViewSet):
     queryset = Marca.objects.all()
@@ -19,6 +66,10 @@ class MarcaViewSet(viewsets.ModelViewSet):
 class CategoriaViewSet(viewsets.ModelViewSet):
     queryset = Categoria.objects.all()
     serializer_class = CategoriaSerializer
+
+class customUserViewSet(viewsets.ModelViewSet):
+    queryset = CustomUser.objects.all()
+    serializer_class = CustomUserSerializer
 
 class ProductoViewSet(viewsets.ModelViewSet):
     queryset = Producto.objects.all()
