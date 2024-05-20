@@ -1,6 +1,10 @@
 from rest_framework import serializers
-from .models import Marca, Categoria, Producto, CustomUser, Carrito, ProductoCarrito
+from .models import Marca, Categoria, Producto, CustomUser, Carrito, ProductoCarrito, WebpayTransactionItem
 
+class WebpayTransactionItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = WebpayTransactionItem
+        fields = '__all__'
 
 class MarcaSerializer(serializers.ModelSerializer):
     class Meta:

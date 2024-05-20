@@ -5,14 +5,15 @@ from django.contrib.auth import authenticate, login, logout
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authtoken.models import Token
 from rest_framework import viewsets, generics
-from .serializer import MarcaSerializer, CustomUserSerializer, CategoriaSerializer, ProductoSerializer, CustomUserSerializer, CarritoSerializer, ProductoCarritoSerializer, ProductoSerializer
+from .serializer import WebpayTransactionItemSerializer, MarcaSerializer, CustomUserSerializer, CategoriaSerializer, ProductoSerializer, CustomUserSerializer, CarritoSerializer, ProductoCarritoSerializer, ProductoSerializer
 from .models import Marca, CustomUser, Categoria, Producto, CustomUser, Carrito, ProductoCarrito, WebpayTransaction, WebpayTransactionItem
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
+from django.views import View
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect,JsonResponse
 from transbank.webpay.webpay_plus.transaction import Transaction, WebpayOptions, IntegrationCommerceCodes, IntegrationApiKeys
 from transbank.common.integration_type import IntegrationType
 from transbank.webpay.webpay_plus.transaction import Transaction
@@ -25,59 +26,71 @@ class WebpayView(APIView):
         buy_order = str(random.randrange(1000000, 99999999))
         return_url = request.data.get('return_url')
         try:
-            response = (Transaction()).create(buy_order, session_id, amount, return_url)
+            response = Transaction().create(buy_order, session_id, amount, return_url)
         except TypeError as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        
         WebpayTransaction.objects.create(token=response['token'], amount=amount, user_id=session_id)
-        return Response({'retorno_webpay': response})
+        return Response({
+            'retorno_webpay': {
+                'url': response['url'],
+                'token': response['token']
+            }
+        })
+
     def get(self, request, *args, **kwargs):
         token = request.GET.get('token_ws')
         try:
             transaction = WebpayTransaction.objects.get(token=token)
-            response = Transaction.commit(token)
+            response = Transaction().commit(token)
         except WebpayTransaction.DoesNotExist:
             return Response({'error': 'Transacción no encontrada.'}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-        return Response({'status': response.status, 'amount': transaction.amount})
-
+        
+        return Response({
+            'status': response.get('status'),
+            'amount': transaction.amount,
+            'order_id': response.get('buy_order')
+        })
 
 class WebpayReturnView(APIView):
     def post(self, request, *args, **kwargs):
         token = request.data.get('token_ws')
         if not token:
             return Response({'error': 'token_ws no proporcionado'}, status=status.HTTP_400_BAD_REQUEST)
+        
         try:
-            # Realiza la confirmación de la transacción con el token dado
-            print('Token recibido:', token)
-            response = (Transaction()).commit(token=token)
-            print('Response:', response)
-            if response['status'] == 'AUTHORIZED':
-                # Actualiza el estado de la transacción en la base de datos
+            response = Transaction().commit(token)
+            if response.get('status') == 'AUTHORIZED':
                 webpay_transaction = WebpayTransaction.objects.get(token=token)
                 webpay_transaction.status = 'AUTHORIZED'
                 webpay_transaction.save()
-                # Devuelve una respuesta con los detalles de la transacción
+
+                # Vaciar el carrito del usuario
+                carrito = Carrito.objects.get(usuario=webpay_transaction.user)
+                carrito.productocarrito_set.all().delete()
+
                 return Response({
                     "detail": "Transacción autorizada.",
-                    "status": response['status'],
-                    "amount": response['amount'],
-                    "buy_order": response['buy_order']
+                    "status": response.get('status'),
+                    "amount": response.get('amount'),
+                    "buy_order": response.get('buy_order'),
+                    "token_ws": token  # Devuelve el token_ws para confirmar la transacción en el front-end
                 }, status=status.HTTP_200_OK)
             else:
-                # Si la transacción no está autorizada, devuelve un mensaje de error
                 return Response({
                     "detail": "Transacción no autorizada.",
-                    "status": response['status']
+                    "status": response.get('status')
                 }, status=status.HTTP_400_BAD_REQUEST)
         except WebpayTransaction.DoesNotExist:
-            # Maneja el caso donde no se encuentra la transacción en la base de datos
             return Response({'error': 'Transacción no encontrada.'}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
-            # Maneja otras excepciones y devuelve un mensaje de error genérico
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-
+class WebpayTransactionItemViewSet(viewsets.ModelViewSet):
+    queryset = WebpayTransactionItem.objects.all()
+    serializer_class = WebpayTransactionItemSerializer
 
 class MarcaViewSet(viewsets.ModelViewSet):
     queryset = Marca.objects.all()
