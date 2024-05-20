@@ -18,6 +18,7 @@ from transbank.webpay.webpay_plus.transaction import Transaction, WebpayOptions,
 from transbank.common.integration_type import IntegrationType
 from transbank.webpay.webpay_plus.transaction import Transaction
 from transbank import webpay
+from django.shortcuts import get_object_or_404
 
 class WebpayView(APIView):
     def post(self, request, *args, **kwargs):
@@ -25,12 +26,19 @@ class WebpayView(APIView):
         amount = request.data.get('amount')
         buy_order = str(random.randrange(1000000, 99999999))
         return_url = request.data.get('return_url')
+        products = request.data.get('products')  # Obtén los productos de la solicitud
         try:
             response = Transaction().create(buy_order, session_id, amount, return_url)
         except TypeError as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-        
-        WebpayTransaction.objects.create(token=response['token'], amount=amount, user_id=session_id)
+        transaction = WebpayTransaction.objects.create(token=response['token'], amount=amount, user_id=session_id)
+        # Guarda los productos en WebpayItems
+        for product in products:
+            product_instance = get_object_or_404(Producto, id=product['id'])
+            WebpayTransactionItem.objects.create(quantity=product['quantity'], transaction=transaction, product=product_instance)
+        # Borra los productos del carrito del usuario
+        carrito = get_object_or_404(Carrito, usuario_id=session_id)
+        carrito.productocarrito_set.all().delete()
         return Response({
             'retorno_webpay': {
                 'url': response['url'],

@@ -171,9 +171,9 @@ const Carrito = () => {
                   <p>Cantidad: {producto.cantidad}</p>
                   <p>Precio: {producto.precio}</p>
                   <div style={{ display: 'flex', alignItems: 'center' }}>
-                    <button style={{ backgroundColor: '#4CAF50', color: 'black', padding: '10px 24px', margin: '8px 0', border: 'none', cursor: 'pointer', borderRadius: '4px' }} onClick={() => incrementarCantidad(producto.id)}>+</button>
-                    <button style={{ backgroundColor: '#f44336', color: 'black', padding: '10px 24px', margin: '8px 0', border: 'none', cursor: 'pointer', borderRadius: '4px' }} onClick={() => disminuirCantidad(producto.id)}>-</button>
-                    <button style={{ backgroundColor: '#F1C70B', color: 'black', padding: '10px 24px', margin: '8px 0', border: 'none', cursor: 'pointer', borderRadius: '4px' }} onClick={() => eliminarProducto(producto.id)}>Eliminar</button>
+                    <button style={{ backgroundColor: '#4CAF50', color: 'white', padding: '10px 24px', margin: '8px 0', border: 'none', cursor: 'pointer', borderRadius: '4px', margin: '4px 2px' }} onClick={() => incrementarCantidad(producto.id)}>+</button>
+                    <button style={{ backgroundColor: '#f44336', color: 'white', padding: '10px 24px', margin: '8px 0', border: 'none', cursor: 'pointer', borderRadius: '4px', margin: '4px 2px' }} onClick={() => disminuirCantidad(producto.id)}>-</button>
+                    <button style={{ backgroundColor: '#F1C70B', color: 'black', padding: '10px 24px', margin: '8px 0', border: 'none', cursor: 'pointer', borderRadius: '4px', margin: '4px 2px' }} onClick={() => eliminarProducto(producto.id)}>Eliminar</button>
                   </div>
                 </div>
               </div>
