@@ -1,3 +1,4 @@
+import random
 from django.shortcuts import render
 from rest_framework.decorators import api_view, action
 from django.contrib.auth import authenticate, login, logout
@@ -16,37 +17,21 @@ from transbank.webpay.webpay_plus.transaction import Transaction
 
 class WebpayView(APIView):
     def post(self, request, *args, **kwargs):
-        data = request.data
-        buy_order = data.get('buy_order')
-        session_id = data.get('session_id')
-        amount = data.get('amount')
-        return_url = data.get('return_url')  # Extraer return_url del cuerpo de la solicitud
-        products = data.get('products')  # Extraer la lista de productos de la solicitud
-
-        if not return_url:
-            return Response({'error': 'return_url is required'}, status=status.HTTP_400_BAD_REQUEST)
-
+        session_id = request.data.get('user_id')
+        amount = request.data.get('amount')
+        buy_order = str(random.randrange(1000000, 99999999))
+        return_url = request.data.get('return_url')
         try:
-            response = Transaction.create(buy_order, session_id, amount, return_url)  # Pasar return_url a Transaction.create()
+            response = (Transaction()).create(buy_order, session_id, amount, return_url)
         except TypeError as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
-        # Crear una nueva transacción Webpay en la base de datos
-        transaction = WebpayTransaction.objects.create(token=response['token'], amount=amount, user_id=data.get('user_id'))
-        
-        # Procesar cada producto en la lista de productos
-        for item in products:
-            product = Producto.objects.get(id=item['id'])
-            quantity = item['quantity']
-            WebpayTransactionItem.objects.create(transaction=transaction, product=product, quantity=quantity)
-        
+        transaction = WebpayTransaction.objects.create(token=response['token'], amount=amount, user_id=session_id)
         return Response({'token': response['token']})
 
     def get(self, request, *args, **kwargs):
-        token = request.GET.get('token_ws')  # Obtener el token de la solicitud
-        transaction = WebpayTransaction.objects.get(token=token)  # Buscar la transacción por el token
-        response = Transaction.commit(token)  # Hacer commit de la transacción con el token
-        # Aquí puedes manejar la respuesta de la transacción (por ejemplo, redirigir al usuario a una página de confirmación)
+        token = request.GET.get('token_ws')  
+        transaction = WebpayTransaction.objects.get(token=token)  
+        response = Transaction.commit(token) 
         return Response({'status': response.status, 'amount': transaction.amount})
 
 class WebpayReturnView(APIView):

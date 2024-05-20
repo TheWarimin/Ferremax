@@ -79,6 +79,7 @@ class ProductoCarrito(models.Model):
 class WebpayTransaction(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
+    token = models.CharField(max_length=64, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
 class WebpayTransactionItem(models.Model):

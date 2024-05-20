@@ -117,8 +117,8 @@ const Carrito = () => {
   const comprar = () => {
     const user_id = localStorage.getItem('user_id');  // Obtener el ID del usuario del localStorage
     const products = carrito.map(producto => ({id: producto.id, quantity: producto.cantidad}));  // Crear una lista de productos con 'id' y 'quantity'
-    const return_url = 'http://localhost:3000/webpay/return/';  // URL de retorno después de la compra
-
+    const return_url = 'http://localhost:3000/';  // URL de retorno después de la compra
+    console.log('Comprando:', user_id, products, totalCLP, return_url, token);
     fetch('http://localhost:8000/webpay/', {  // Reemplaza esta URL con la URL de tu vista `WebpayView`
         method: 'POST',
         headers: {
@@ -129,14 +129,13 @@ const Carrito = () => {
             user_id: user_id,
             amount: totalCLP,
             products: products,
-            return_url: return_url 
+            return_url: return_url, 
         })
     })
     .then(response => response.json())
     .then(data => {
         console.log('Success:', data);
-        // Redirigir al usuario a la página de pago con el token
-        window.location.href = `https://webpay.example.com/pay?token=${data.token}`;
+        // La redirección se ha eliminado
     })
     .catch((error) => {
         console.error('Error:', error);
