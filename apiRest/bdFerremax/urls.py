@@ -9,7 +9,6 @@ router.register(r'Categoria', views.CategoriaViewSet, 'Categoria')
 router.register(r'Producto', views.ProductoViewSet, 'Producto')
 router.register(r'carritos', CarritoViewSet)
 router.register(r'productos-carrito', ProductoCarritoViewSet)
-router.register(r'productos', ProductoViewSet)
 router.register(r'usuarios', customUserViewSet)
 
 urlpatterns = [
@@ -19,5 +18,5 @@ urlpatterns = [
     path('login/', views.LoginUserView.as_view(), name='login'),
     path('logout/', views.LogoutUserView.as_view(), name='logout'),
     path('webpay/', WebpayView.as_view(), name='webpay'),
-    path('webpay/return/', WebpayReturnView.as_view(), name='webpay_return'),
+    path('webpayreturn/', WebpayReturnView.as_view(), name='webpay_return'),
 ]

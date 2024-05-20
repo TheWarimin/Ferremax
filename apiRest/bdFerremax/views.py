@@ -13,7 +13,10 @@ from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny
 from django.http import HttpResponseRedirect
+from transbank.webpay.webpay_plus.transaction import Transaction, WebpayOptions, IntegrationCommerceCodes, IntegrationApiKeys
+from transbank.common.integration_type import IntegrationType
 from transbank.webpay.webpay_plus.transaction import Transaction
+from transbank import webpay
 
 class WebpayView(APIView):
     def post(self, request, *args, **kwargs):
@@ -25,23 +28,55 @@ class WebpayView(APIView):
             response = (Transaction()).create(buy_order, session_id, amount, return_url)
         except TypeError as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-        transaction = WebpayTransaction.objects.create(token=response['token'], amount=amount, user_id=session_id)
-        return Response({'token': response['token']})
-
+        WebpayTransaction.objects.create(token=response['token'], amount=amount, user_id=session_id)
+        return Response({'retorno_webpay': response})
     def get(self, request, *args, **kwargs):
-        token = request.GET.get('token_ws')  
-        transaction = WebpayTransaction.objects.get(token=token)  
-        response = Transaction.commit(token) 
+        token = request.GET.get('token_ws')
+        try:
+            transaction = WebpayTransaction.objects.get(token=token)
+            response = Transaction.commit(token)
+        except WebpayTransaction.DoesNotExist:
+            return Response({'error': 'Transacción no encontrada.'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         return Response({'status': response.status, 'amount': transaction.amount})
+
 
 class WebpayReturnView(APIView):
     def post(self, request, *args, **kwargs):
         token = request.data.get('token_ws')
-        response = Transaction.commit(token)
-        if response.status == 'AUTHORIZED':
-            return Response({"detail": "Transacción autorizada."}, status=status.HTTP_200_OK)
-        else:
-            return Response({"detail": "Transacción no autorizada."}, status=status.HTTP_400_BAD_REQUEST)
+        if not token:
+            return Response({'error': 'token_ws no proporcionado'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            # Realiza la confirmación de la transacción con el token dado
+            print('Token recibido:', token)
+            response = (Transaction()).commit(token=token)
+            print('Response:', response)
+            if response['status'] == 'AUTHORIZED':
+                # Actualiza el estado de la transacción en la base de datos
+                webpay_transaction = WebpayTransaction.objects.get(token=token)
+                webpay_transaction.status = 'AUTHORIZED'
+                webpay_transaction.save()
+                # Devuelve una respuesta con los detalles de la transacción
+                return Response({
+                    "detail": "Transacción autorizada.",
+                    "status": response['status'],
+                    "amount": response['amount'],
+                    "buy_order": response['buy_order']
+                }, status=status.HTTP_200_OK)
+            else:
+                # Si la transacción no está autorizada, devuelve un mensaje de error
+                return Response({
+                    "detail": "Transacción no autorizada.",
+                    "status": response['status']
+                }, status=status.HTTP_400_BAD_REQUEST)
+        except WebpayTransaction.DoesNotExist:
+            # Maneja el caso donde no se encuentra la transacción en la base de datos
+            return Response({'error': 'Transacción no encontrada.'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            # Maneja otras excepciones y devuelve un mensaje de error genérico
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
 
 
 class MarcaViewSet(viewsets.ModelViewSet):

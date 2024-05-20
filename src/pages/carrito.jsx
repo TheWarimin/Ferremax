@@ -7,6 +7,9 @@ const Carrito = () => {
   const navigate = useNavigate();
   const [carrito, setCarrito] = useState([]);
   const [dollarValue, setDollarValue] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  const [tokenWs, setTokenWs] = useState(null);
+  const [transactionStatus, setTransactionStatus] = useState(null);
   const token = localStorage.getItem('token');
   const userEmail = localStorage.getItem('userEmail');
 
@@ -134,13 +137,56 @@ const Carrito = () => {
     })
     .then(response => response.json())
     .then(data => {
-        console.log('Success:', data);
-        // La redirección se ha eliminado
-    })
-    .catch((error) => {
+      console.log('Success:', data);
+      setTokenWs(data.retorno_webpay.token); 
+      setShowModal(true);
+  
+      // Crear un nuevo div para contener el formulario
+      let div = document.createElement('div');
+  
+      // Generar el formulario HTML con los datos recibidos
+      div.innerHTML = `
+          <form method="post" action="${data.retorno_webpay.url}">
+              <input name="token_ws" value="${data.retorno_webpay.token}" />
+              <input type="submit" value="Ir a pagar" />
+          </form>
+      `;
+  
+      // Agregar el div al cuerpo del documento
+      document.body.appendChild(div);
+  
+      // Enviar el formulario automáticamente
+      div.querySelector('form').submit();
+  })
+  .catch((error) => {
+      console.error('Error:', error);
+  });
+  };
+
+  const confirmarTransaccion = () => {
+    if (tokenWs) {
+      console.log('tokenWS:', tokenWs);
+      fetch('http://localhost:8000/webpayreturn/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          token_ws: tokenWs
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        console.log('Confirmación:', data);
+        setTransactionStatus(data.detail);
+        setShowModal(false);  // Oculta el modal
+      })
+      .catch((error) => {
         console.error('Error:', error);
-    });
-};
+        setTransactionStatus('Error al confirmar el pago.');
+      });
+    }
+  };
 
   const totalCLP = carrito.reduce((total, producto) => total + producto.precio * producto.cantidad, 0);
   const totalUSD = dollarValue ? (totalCLP / dollarValue).toFixed(2) : 'Calculando...';
@@ -177,6 +223,23 @@ const Carrito = () => {
         <button onClick={comprar}>Comprar</button>
       </div>
       <button onClick={irAProductos}>Volver a productos</button>
+
+      {/* Modal de Confirmación */}
+      {showModal && (
+        <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', backgroundColor: 'grey', padding: '20px', borderRadius: '10px', zIndex: 1000 }}>
+          <h2>Confirmación de Pago</h2>
+          <p>¿Desea confirmar la transacción?</p>
+          <button onClick={confirmarTransaccion}>Confirmar</button>
+          <button onClick={() => setShowModal(false)}>Cancelar</button>
+        </div>
+      )}
+
+      {/* Mensaje de Estado de la Transacción */}
+      {transactionStatus && (
+        <div style={{ marginTop: '20px', color: transactionStatus === 'Transacción autorizada.' ? 'green' : 'red' }}>
+          {transactionStatus}
+        </div>
+      )}
     </div>
   );
 };
