@@ -1,3 +1,2 @@
-la branch principal es main no master
-master es la base en donde aplique las apis
-cambie de branch a  ### `main`
+la branch principal es main no master,
+master es la base porfavor cambie de branch a `main`
