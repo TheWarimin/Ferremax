@@ -47,9 +47,14 @@ const Navbar = () => {
 
   const handleClose = () => {
     setOpen(false);
-    logOut();
+  };
+
+  const handleLogout = () => {
     setUserEmail('');
+    localStorage.removeItem('user_id');
+    logOut();
     navigate('/');
+    handleClose(); 
   };
 
   const handleButtonClick = () => {
@@ -84,7 +89,7 @@ const Navbar = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClose}>Cancelar</Button>
-          <Button onClick={handleClose}>Cerrar sesión</Button>
+          <Button onClick={handleLogout}>Cerrar sesión</Button>
         </DialogActions>
       </Dialog>
 

@@ -64,18 +64,14 @@ class WebpayReturnView(APIView):
         token = request.data.get('token_ws')
         if not token:
             return Response({'error': 'token_ws no proporcionado'}, status=status.HTTP_400_BAD_REQUEST)
-        
         try:
             response = Transaction().commit(token)
             if response.get('status') == 'AUTHORIZED':
                 webpay_transaction = WebpayTransaction.objects.get(token=token)
                 webpay_transaction.status = 'AUTHORIZED'
                 webpay_transaction.save()
-
-                # Vaciar el carrito del usuario
                 carrito = Carrito.objects.get(usuario=webpay_transaction.user)
                 carrito.productocarrito_set.all().delete()
-
                 return Response({
                     "detail": "Transacción autorizada.",
                     "status": response.get('status'),
