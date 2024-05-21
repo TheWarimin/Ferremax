@@ -173,7 +173,7 @@ const Carrito = () => {
           ))}
         </ul>
       )}
-      <div>
+      <div style={{ marginBottom: '150px' }}> 
         <h3>Total: {totalCLP} CLP / {totalUSD} USD</h3>
         <button style={{ backgroundColor: '#4CAF50', color: 'white', padding: '15px 32px', textAlign: 'center', textDecoration: 'none', display: 'inline-block', fontSize: '16px', margin: '4px 2px', cursor: 'pointer', borderRadius: '10px' }} onClick={comprar}>Comprar</button>
         <button style={{ backgroundColor: '#008CBA', color: 'white', padding: '15px 32px', textAlign: 'center', textDecoration: 'none', display: 'inline-block', fontSize: '16px', margin: '4px 2px', cursor: 'pointer', borderRadius: '10px' }} onClick={irAProductos}>Volver a Producto</button>
