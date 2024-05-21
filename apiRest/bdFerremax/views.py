@@ -5,7 +5,7 @@ from django.contrib.auth import authenticate, login, logout
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authtoken.models import Token
 from rest_framework import viewsets, generics
-from .serializer import WebpayTransactionItemSerializer, MarcaSerializer, CustomUserSerializer, CategoriaSerializer, ProductoSerializer, CustomUserSerializer, CarritoSerializer, ProductoCarritoSerializer, ProductoSerializer
+from .serializer import WebpayTransactionSerializer, WebpayTransactionItemSerializer, MarcaSerializer, CustomUserSerializer, CategoriaSerializer, ProductoSerializer, CustomUserSerializer, CarritoSerializer, ProductoCarritoSerializer, ProductoSerializer
 from .models import Marca, CustomUser, Categoria, Producto, CustomUser, Carrito, ProductoCarrito, WebpayTransaction, WebpayTransactionItem
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
@@ -26,26 +26,23 @@ class WebpayView(APIView):
         amount = request.data.get('amount')
         buy_order = str(random.randrange(1000000, 99999999))
         return_url = request.data.get('return_url')
-        products = request.data.get('products')  # Obtén los productos de la solicitud
+        products = request.data.get('products')
         try:
             response = Transaction().create(buy_order, session_id, amount, return_url)
         except TypeError as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         transaction = WebpayTransaction.objects.create(token=response['token'], amount=amount, user_id=session_id)
-        # Guarda los productos en WebpayItems
         for product in products:
             product_instance = get_object_or_404(Producto, id=product['id'])
             WebpayTransactionItem.objects.create(quantity=product['quantity'], transaction=transaction, product=product_instance)
-        # Borra los productos del carrito del usuario
-        carrito = get_object_or_404(Carrito, usuario_id=session_id)
-        carrito.productocarrito_set.all().delete()
+            carrito = get_object_or_404(Carrito, usuario_id=session_id)
+            carrito.productocarrito_set.all().delete()
         return Response({
             'retorno_webpay': {
                 'url': response['url'],
                 'token': response['token']
             }
         })
-
     def get(self, request, *args, **kwargs):
         token = request.GET.get('token_ws')
         try:
@@ -95,10 +92,19 @@ class WebpayReturnView(APIView):
             return Response({'error': 'Transacción no encontrada.'}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        
+class WebpayTransactionViewSet(viewsets.ModelViewSet):
+    queryset = WebpayTransaction.objects.all()
+    serializer_class = WebpayTransactionSerializer
 
 class WebpayTransactionItemViewSet(viewsets.ModelViewSet):
-    queryset = WebpayTransactionItem.objects.all()
     serializer_class = WebpayTransactionItemSerializer
+    def get_queryset(self):
+        queryset = WebpayTransactionItem.objects.all()
+        transaction_id = self.request.query_params.get('transaction_id', None)
+        if transaction_id is not None:
+            queryset = queryset.filter(transaction_id=transaction_id)
+        return queryset
 
 class MarcaViewSet(viewsets.ModelViewSet):
     queryset = Marca.objects.all()

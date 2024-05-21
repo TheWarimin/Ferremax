@@ -19,6 +19,7 @@ const Productos = () => {
             setError(data.error);
           } else {
             setTransactionDetail(data);
+            console.log('Transaction details:', data);
           }
         })
         .catch(error => {
@@ -30,33 +31,45 @@ const Productos = () => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-    <h2>Detalle del Producto</h2>
-    {error ? (
-      <p>{error}</p>
-    ) : transactionDetail ? (
-      <>
-        <table style={{ border: '1px solid black', borderCollapse: 'collapse' }}>
-          <thead>
-            <tr>
-              <th style={{ border: '1px solid black', padding: '10px' }}>Estado de la transacción</th>
-              <th style={{ border: '1px solid black', padding: '10px' }}>Monto</th>
-              <th style={{ border: '1px solid black', padding: '10px' }}>Orden</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td style={{ border: '1px solid black', padding: '10px' }}>{transactionDetail.status}</td>
-              <td style={{ border: '1px solid black', padding: '10px' }}>{transactionDetail.amount}</td>
-              <td style={{ border: '1px solid black', padding: '10px' }}>{transactionDetail.order_id}</td>
-            </tr>
-          </tbody>
-        </table>
-        <p>Para volver al inicio, <Link to="/">presione aquí</Link>.</p>
-      </>
-    ) : (
-      <p>Cargando detalles de la transacción...</p>
-    )}
-  </div>
+      <h2>Detalle del Producto</h2>
+      {error ? (
+        <p>{error}</p>
+      ) : transactionDetail ? (
+        <>
+          <table style={{ border: '1px solid black', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr>
+                <th style={{ border: '1px solid black', padding: '10px' }}>Estado de la transacción</th>
+                <th style={{ border: '1px solid black', padding: '10px' }}>Monto</th>
+                <th style={{ border: '1px solid black', padding: '10px' }}>Orden</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style={{ border: '1px solid black', padding: '10px' }}>{transactionDetail.status}</td>
+                <td style={{ border: '1px solid black', padding: '10px' }}>{transactionDetail.amount}</td>
+                <td style={{ border: '1px solid black', padding: '10px' }}>{transactionDetail.order_id}</td>
+              </tr>
+            </tbody>
+          </table>
+          <h2>Productos comprados</h2>
+          <ul>
+            {transactionDetail.items && transactionDetail.items.length > 0 ? (
+              transactionDetail.items.map((item, index) => (
+                <li key={index}>
+                  Producto: {item.product_name}, Precio: ${item.product_price}, Cantidad: {item.quantity}
+                </li>
+              ))
+            ) : (
+              <p>No se encontraron productos.</p>
+            )}
+          </ul>
+          <p>Para volver al inicio, <Link to="/">presione aquí</Link>.</p>
+        </>
+      ) : (
+        <p>Cargando detalles de la transacción...</p>
+      )}
+    </div>
   );
 };
 

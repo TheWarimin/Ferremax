@@ -11,38 +11,38 @@ const Carrito = () => {
   const token = localStorage.getItem('token');
   const userEmail = localStorage.getItem('userEmail');
 
-  useEffect(() => {
-    const fetchCarrito = async () => {
-      try {
-        const response = await axios.get('http://localhost:8000/carritos/', {
-          headers: {
-            'Authorization': `Token ${token}`
-          }
-        });
-
-        const userCarrito = response.data.find(carrito => carrito.usuario === userEmail);
-        if (userCarrito) {
-          const productPromises = userCarrito.productos.map(item =>
-            axios.get(`http://localhost:8000/Producto/${item.producto}/`, {
-              headers: {
-                'Authorization': `Token ${token}`
-              }
-            }).then(response => ({
-              ...response.data, 
-              cantidad: item.cantidad, 
-              productoCarritoId: item.id
-            }))
-          );
-          const productos = await Promise.all(productPromises);
-          setCarrito(productos);
-        } else {
-          console.log('No se encontró un carrito para el usuario:', userEmail);
+  const fetchCarrito = async () => {
+    try {
+      const response = await axios.get('http://localhost:8000/carritos/', {
+        headers: {
+          'Authorization': `Token ${token}`
         }
-      } catch (error) {
-        console.error('Error obteniendo el carrito:', error);
-      }
-    };
+      });
 
+      const userCarrito = response.data.find(carrito => carrito.usuario === userEmail);
+      if (userCarrito) {
+        const productPromises = userCarrito.productos.map(item =>
+          axios.get(`http://localhost:8000/Producto/${item.producto}/`, {
+            headers: {
+              'Authorization': `Token ${token}`
+            }
+          }).then(response => ({
+            ...response.data, 
+            cantidad: item.cantidad, 
+            productoCarritoId: item.id
+          }))
+        );
+        const productos = await Promise.all(productPromises);
+        setCarrito(productos);
+      } else {
+        console.log('No se encontró un carrito para el usuario:', userEmail);
+      }
+    } catch (error) {
+      console.error('Error obteniendo el carrito:', error);
+    }
+  };
+
+  useEffect(() => {
     const fetchDollarValue = async () => {
       try {
         const value = await ValorDolar();
@@ -56,59 +56,52 @@ const Carrito = () => {
     fetchDollarValue();
   }, [userEmail, token]);
 
-  const actualizarCarrito = async (productoCarritoId, nuevaCantidad) => {
-    try {
-      console.log('token:', token);
-      const response = await axios.put(`http://localhost:8000/productos-carrito/${productoCarritoId}/`, 
-        { 
-          cantidad: nuevaCantidad,
-          producto: productoCarritoId
-        }, 
-        {
-          headers: {
-            'Authorization': `Token ${token}`
-          }
-        }
-      );
-      console.log('Carrito actualizado:', response.data);
-    } catch (error) {
-      console.error('Error actualizando el carrito:', error);
-    }
+  const incrementarCantidad = (producto) => {
+    axios.put(`http://localhost:8000/productos-carrito/${producto.productoCarritoId}/`, {
+      producto: producto.id,
+      cantidad: Math.max(0, producto.cantidad + 1),
+    }, {
+      headers: {
+        'Authorization': `Token ${token}`
+      }
+    })
+    .then(() => {
+      fetchCarrito();
+    })
+    .catch(error => {
+      console.error('Error incrementing quantity:', error);
+    });
   };
-
-  const eliminarDelCarrito = async (productoCarritoId) => {
-    try {
-      await axios.delete(`http://localhost:8000/productos-carrito/${productoCarritoId}/`, {
-        headers: {
-          'Authorization': `Token ${token}`
-        }
-      });
-      setCarrito(carrito.filter(producto => producto.productoCarritoId !== productoCarritoId));
-      console.log('Producto eliminado del carrito');
-    } catch (error) {
-      console.error('Error eliminando el producto del carrito:', error);
-    }
+  
+  const disminuirCantidad = (producto) => {
+    axios.put(`http://localhost:8000/productos-carrito/${producto.productoCarritoId}/`, {
+      producto: producto.id,
+      cantidad: Math.max(0, producto.cantidad - 1),
+    }, {
+      headers: {
+        'Authorization': `Token ${token}`
+      }
+    })
+    .then(() => {
+      fetchCarrito();
+    })
+    .catch(error => {
+      console.error('Error decreasing quantity:', error);
+    });
   };
-
-  const incrementarCantidad = (productoId) => {
-    const producto = carrito.find(producto => producto.id === productoId);
-    const nuevaCantidad = producto.cantidad + 1;
-    setCarrito(carrito.map(producto => producto.id === productoId ? {...producto, cantidad: nuevaCantidad} : producto));
-    actualizarCarrito(producto.productoCarritoId, nuevaCantidad);
-  };
-
-  const disminuirCantidad = (productoId) => {
-    const producto = carrito.find(producto => producto.id === productoId);
-    if (producto.cantidad > 1) {
-      const nuevaCantidad = producto.cantidad - 1;
-      setCarrito(carrito.map(producto => producto.id === productoId ? {...producto, cantidad: nuevaCantidad} : producto));
-      actualizarCarrito(producto.productoCarritoId, nuevaCantidad);
-    }
-  };
-
-  const eliminarProducto = (productoId) => {
-    const producto = carrito.find(producto => producto.id === productoId);
-    eliminarDelCarrito(producto.productoCarritoId);
+  
+  const eliminarDelCarrito = (producto) => {
+    axios.delete(`http://localhost:8000/productos-carrito/${producto.productoCarritoId}/`, {
+      headers: {
+        'Authorization': `Token ${token}`
+      }
+    })
+    .then(() => {
+      setCarrito(carrito.filter(item => item.id !== producto.id));
+    })
+    .catch(error => {
+      console.error('Error deleting product:', error);
+    });
   };
 
   const irAProductos = () => {
@@ -119,7 +112,6 @@ const Carrito = () => {
     const user_id = localStorage.getItem('user_id');
     const products = carrito.map(producto => ({ id: producto.id, quantity: producto.cantidad }));
     const return_url = 'http://localhost:3000/PProducto/';
-    
     try {
         const response = await fetch('http://localhost:8000/webpay/', {
             method: 'POST',
@@ -149,7 +141,8 @@ const Carrito = () => {
     } catch (error) {
         console.error('Error:', error);
     }
-};
+  };
+  
 
   const totalCLP = carrito.reduce((total, producto) => total + producto.precio * producto.cantidad, 0);
   const totalUSD = dollarValue ? (totalCLP / dollarValue).toFixed(2) : 'Calculando...';
@@ -171,9 +164,9 @@ const Carrito = () => {
                   <p>Cantidad: {producto.cantidad}</p>
                   <p>Precio: {producto.precio}</p>
                   <div style={{ display: 'flex', alignItems: 'center' }}>
-                    <button style={{ backgroundColor: '#4CAF50', color: 'white', padding: '10px 24px', margin: '8px 0', border: 'none', cursor: 'pointer', borderRadius: '4px', margin: '4px 2px' }} onClick={() => incrementarCantidad(producto.id)}>+</button>
-                    <button style={{ backgroundColor: '#f44336', color: 'white', padding: '10px 24px', margin: '8px 0', border: 'none', cursor: 'pointer', borderRadius: '4px', margin: '4px 2px' }} onClick={() => disminuirCantidad(producto.id)}>-</button>
-                    <button style={{ backgroundColor: '#F1C70B', color: 'black', padding: '10px 24px', margin: '8px 0', border: 'none', cursor: 'pointer', borderRadius: '4px', margin: '4px 2px' }} onClick={() => eliminarProducto(producto.id)}>Eliminar</button>
+                    <button style={{ backgroundColor: '#4CAF50', color: 'white', padding: '10px 24px', margin: '8px 0', border: 'none', cursor: 'pointer', borderRadius: '4px', margin: '4px 2px' }} onClick={() => incrementarCantidad(producto)}>+</button>
+                    <button style={{ backgroundColor: '#f44336', color: 'white', padding: '10px 24px', margin: '8px 0', border: 'none', cursor: 'pointer', borderRadius: '4px', margin: '4px 2px' }} onClick={() => disminuirCantidad(producto)}>-</button>
+                    <button style={{ backgroundColor: '#F1C70B', color: 'black', padding: '10px 24px', margin: '8px 0', border: 'none', cursor: 'pointer', borderRadius: '4px', margin: '4px 2px' }} onClick={() => eliminarDelCarrito(producto)}>Eliminar</button>
                   </div>
                 </div>
               </div>
