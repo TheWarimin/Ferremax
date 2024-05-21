@@ -156,7 +156,7 @@ const Carrito = () => {
             <li key={producto.id}>
               <div style={{ display: 'flex', alignItems: 'center' }}>
                 <div>
-                  <img src={producto.imagen} alt={producto.nombre} width="50" height="50" />
+                  <img src={producto.imagen} alt={producto.nombre} width="150" height="150" />
                 </div>
                 <div style={{ marginLeft: '10px' }}>
                   <h4>{producto.nombre}</h4>
