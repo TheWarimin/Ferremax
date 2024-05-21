@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import { ValorDolar } from '../components/bancoApi';  
+import axios from 'axios'; 
 
 const Carrito = () => {
   const navigate = useNavigate();
@@ -42,16 +41,16 @@ const Carrito = () => {
     }
   };
 
-  useEffect(() => {
-    const fetchDollarValue = async () => {
-      try {
-        const value = await ValorDolar();
-        setDollarValue(value);
-      } catch (error) {
-        console.error('Error obteniendo el valor del dólar:', error);
-      }
-    };
+  const fetchDollarValue = async () => {
+    try {
+      const response = await axios.get('http://localhost:8000/valor-dolar/');
+      setDollarValue(response.data.valor);
+    } catch (error) {
+      console.error(`Hubo un problema con la solicitud: ${error.message}`);
+    }
+  };
 
+  useEffect(() => {
     fetchCarrito();
     fetchDollarValue();
   }, [userEmail, token]);

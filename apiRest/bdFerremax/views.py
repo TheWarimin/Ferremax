@@ -14,6 +14,33 @@ from rest_framework.permissions import AllowAny
 from transbank.webpay.webpay_plus.transaction import Transaction
 from transbank.webpay.webpay_plus.transaction import Transaction
 from django.shortcuts import get_object_or_404
+from datetime import datetime, timedelta
+from django.http import JsonResponse
+from django.views import View
+import requests
+
+class ValorDolarView(View):
+    def get(self, request, *args, **kwargs):
+        hoy = datetime.now()
+        first_date = hoy - timedelta(days=5)
+        first_date_string = first_date.strftime('%Y-%m-%d') 
+        fecha_valor = hoy - timedelta(days=4)
+        fecha_valor_string = fecha_valor.strftime('%d-%m-%Y')
+        url = f"https://si3.bcentral.cl/SieteRestWS/SieteRestWS.ashx?user=ivostambuk7@gmail.com&pass=2749Ivostambuk&firstdate={first_date_string}&timeseries=F073.TCO.PRE.Z.D&function=GetSeries"
+        print(url)
+        try:
+            response = requests.get(url)
+            response.raise_for_status()
+            data = response.json()
+            observacion = next((obs for obs in data['Series']['Obs'] if obs['indexDateString'] == fecha_valor_string), None)
+            if observacion:
+                return JsonResponse({'valor': float(observacion['value'])})
+            else:
+                return JsonResponse({'error': f"No se encontró el valor para la fecha {fecha_valor_string}"}, status=404)
+        except requests.HTTPError as http_err:
+            return JsonResponse({'error': f"Error en la solicitud: {http_err}"}, status=400)
+        except Exception as err:
+            return JsonResponse({'error': f"Hubo un problema con la solicitud: {err}"}, status=500)
 
 class WebpayView(APIView):
     def post(self, request, *args, **kwargs):
