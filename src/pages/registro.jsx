@@ -17,7 +17,6 @@ function Registro() {
             setError('Todos los campos son obligatorios');
             return;
         }
-
         let userData = {
             username: username,
             email: email,
@@ -32,12 +31,17 @@ function Registro() {
                 },
                 body: JSON.stringify(userData),
             });
-
-            if (!response.ok) {
-                throw new Error('Error al registrarse');
-            }
-
             const data = await response.json();
+            if (!response.ok) {
+                let errorMessage = 'Error al registrarse';
+                if (data.email) {
+                    errorMessage = data.email[0];
+                } else if (data.username) {
+                    errorMessage = data.username[0];
+                }
+                throw new Error(errorMessage);
+            }
+        
             navigate('/login');
             console.log('Success:', data);
         } catch (error) {
