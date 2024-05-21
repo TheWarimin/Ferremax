@@ -15,5 +15,9 @@ para la base de datos se debera ir a la ruta
 en donde se abrira un terminal cmd y se ejutara:
 ### `py manage.py runserver`
 
+existe un crud de productos en:
+### `http://localhost:3000/inventario`
 
-
+existe un bug en el que todas las imagenes del pc se ven sin 
+portada y por alguna razon no pueden ser llamadas por get
+### `no me hago responmsable de ello`
