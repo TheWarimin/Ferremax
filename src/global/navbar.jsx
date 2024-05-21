@@ -64,7 +64,7 @@ const Navbar = () => {
       iraRegistro();
     }
   };
-
+//por ahora buscar es solo un placeholder ya que se tiene pensado implementar un buscador funcional
   return (
     <Box display="flex" justifyContent="space-between" p={2}>
       <Box display="flex" borderRadius="3px">
