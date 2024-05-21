@@ -1,6 +1,7 @@
-la branch principal es main
+la branch principal es main no master
+master es la base en donde aplique las apis 
 
-una vez se clone o se descarge main se abre
+una vez se clone o se descarge main se abre la carpeta
  ### `ferremax-main`
 dentro se la carpeta principal se abre un terminal cmd y se ejecuta:
 ### `pip install -r requirements.txt`
