@@ -22,22 +22,29 @@ class WebpayView(APIView):
         buy_order = str(random.randrange(1000000, 99999999))
         return_url = request.data.get('return_url')
         products = request.data.get('products')
+        if not session_id or not amount or not return_url or not products:
+            return Response({'error': 'Datos incompletos'}, status=status.HTTP_400_BAD_REQUEST)
         try:
             response = Transaction().create(buy_order, session_id, amount, return_url)
         except TypeError as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-        transaction = WebpayTransaction.objects.create(token=response['token'], amount=amount, user_id=session_id)
+        transaction, created = WebpayTransaction.objects.get_or_create(
+            token=response['token'], defaults={'amount': amount, 'user_id': session_id}
+        )
+        if not created:
+            return Response({'error': 'Transacción duplicada'}, status=status.HTTP_400_BAD_REQUEST)
         for product in products:
             product_instance = get_object_or_404(Producto, id=product['id'])
             WebpayTransactionItem.objects.create(quantity=product['quantity'], transaction=transaction, product=product_instance)
-            carrito = get_object_or_404(Carrito, usuario_id=session_id)
-            carrito.productocarrito_set.all().delete()
+        carrito = get_object_or_404(Carrito, usuario_id=session_id)
+        carrito.productocarrito_set.all().delete()
         return Response({
             'retorno_webpay': {
                 'url': response['url'],
                 'token': response['token']
             }
         })
+    
     def get(self, request, *args, **kwargs):
         token = request.GET.get('token_ws')
         try:
@@ -47,12 +54,10 @@ class WebpayView(APIView):
             return Response({'error': 'Transacción no encontrada.'}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-        
-        return Response({
-            'status': response.get('status'),
-            'amount': transaction.amount,
-            'order_id': response.get('buy_order')
-        })
+        transaction_data = WebpayTransactionSerializer(transaction).data
+        transaction_data['status'] = response.get('status')
+        transaction_data['order_id'] = response.get('buy_order')
+        return Response(transaction_data)
 
 class WebpayReturnView(APIView):
     def post(self, request, *args, **kwargs):
@@ -72,7 +77,7 @@ class WebpayReturnView(APIView):
                     "status": response.get('status'),
                     "amount": response.get('amount'),
                     "buy_order": response.get('buy_order'),
-                    "token_ws": token  # Devuelve el token_ws para confirmar la transacción en el front-end
+                    "token_ws": token 
                 }, status=status.HTTP_200_OK)
             else:
                 return Response({

@@ -9,9 +9,8 @@ const Productos = () => {
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
     const token_ws = searchParams.get('token_ws');
-
+    
     if (token_ws) {
-      // Hacer la solicitud al backend para obtener los detalles de la transacción
       fetch(`http://localhost:8000/webpay/?token_ws=${token_ws}`)
         .then(response => response.json())
         .then(data => {
