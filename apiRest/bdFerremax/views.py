@@ -1,6 +1,5 @@
 import random
-from django.shortcuts import render
-from rest_framework.decorators import api_view, action
+from rest_framework.decorators import action
 from django.contrib.auth import authenticate, login, logout
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authtoken.models import Token
@@ -9,15 +8,11 @@ from .serializer import WebpayTransactionSerializer, WebpayTransactionItemSerial
 from .models import Marca, CustomUser, Categoria, Producto, CustomUser, Carrito, ProductoCarrito, WebpayTransaction, WebpayTransactionItem
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
-from django.views import View
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny
-from django.http import HttpResponseRedirect,JsonResponse
-from transbank.webpay.webpay_plus.transaction import Transaction, WebpayOptions, IntegrationCommerceCodes, IntegrationApiKeys
-from transbank.common.integration_type import IntegrationType
 from transbank.webpay.webpay_plus.transaction import Transaction
-from transbank import webpay
+from transbank.webpay.webpay_plus.transaction import Transaction
 from django.shortcuts import get_object_or_404
 
 class WebpayView(APIView):
