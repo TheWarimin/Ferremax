@@ -24,7 +24,7 @@ class ValorDolarView(View):
         hoy = datetime.now()
         first_date = hoy - timedelta(days=5)
         first_date_string = first_date.strftime('%Y-%m-%d') 
-        fecha_valor = hoy - timedelta(days=4)
+        fecha_valor = hoy - timedelta(days=0)
         fecha_valor_string = fecha_valor.strftime('%d-%m-%Y')
         url = f"https://si3.bcentral.cl/SieteRestWS/SieteRestWS.ashx?user=ivostambuk7@gmail.com&pass=2749Ivostambuk&firstdate={first_date_string}&timeseries=F073.TCO.PRE.Z.D&function=GetSeries"
         print(url)
