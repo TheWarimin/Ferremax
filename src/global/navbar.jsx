@@ -134,9 +134,6 @@ const Navbar = ({ onCurrencyChange }) => {
       </Dialog>
 
       <Box display="flex">
-        <IconButton type="button" sx={{ p: 1 }} onClick={irACarrito}>
-          <ShoppingCartOutlinedIcon />
-        </IconButton>
         <Select
           value={selectedCurrency}
           onChange={handleSelectChange}
@@ -147,6 +144,9 @@ const Navbar = ({ onCurrencyChange }) => {
           <MenuItem value={'Arg'}>Arg</MenuItem>
           <MenuItem value={'Peso'}>Peso Chileno</MenuItem>
         </Select>
+        <IconButton type="button" sx={{ p: 1 }} onClick={irACarrito}>
+          <ShoppingCartOutlinedIcon />
+        </IconButton>
         <IconButton type="button" sx={{ p: 1 }}>
           <NotificationsOutlinedIcon />
         </IconButton>
