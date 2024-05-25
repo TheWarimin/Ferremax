@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { CssBaseline, ThemeProvider } from "@mui/material";
-import { Route, Routes } from "react-router-dom"; 
+import { Route, Routes } from "react-router-dom";
 import { ColorModeContext, useMode } from "./theme";
 
 import Navbar from "./global/navbar";
@@ -22,6 +22,7 @@ import Edit from "./components/Edit";
 import Create from "./components/Create";
 import UserContext from '../src/components/UserContext';
 import { AuthProvider } from '../src/components/AuthContext';
+import Footer from "./global/Footer"; // Importa el nuevo componente de footer
 
 function App() {
   const [userEmail, setUserEmail] = useState(null);
@@ -51,9 +52,9 @@ function App() {
         <ColorModeContext.Provider value={colorMode}>
           <ThemeProvider theme={theme}>
             <CssBaseline />
-            <div className="app">
+            <div className="app" style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
               <Navbar onCurrencyChange={handleCurrencyChange} />
-              <main className="content">
+              <main className="content" style={{ flex: '1' }}>
                 <Routes>
                   <Route path="/" element={<Principal selectedCurrency={selectedCurrency} valorGeneral={valorGeneral} />} />
                   <Route path="/PProducto" element={<PProducto />} />
@@ -72,6 +73,7 @@ function App() {
                   <Route path="/login" element={<Login />} />
                 </Routes>
               </main>
+              <Footer /> 
             </div>
           </ThemeProvider>
         </ColorModeContext.Provider>

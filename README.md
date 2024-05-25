@@ -6,6 +6,8 @@ una vez se clone o se descarge main se abre la carpeta
 dentro se la carpeta principal se abre un terminal cmd y se ejecuta:
 ### `pip install -r requirements.txt`
 ### `npm install react-scripts`
+### `npm install @mui/material`
+### `npm install emailjs-com`
 despues puede ser en el mismo terminal cmd se ejecuta:
 ### `npm run start`
 lo cual correra la pagina react hecha en react.
