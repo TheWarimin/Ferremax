@@ -26,6 +26,24 @@ import { AuthProvider } from '../src/components/AuthContext';
 function App() {
   const [userEmail, setUserEmail] = useState(null);
   const [theme, colorMode] = useMode();
+  const [selectedCurrency, setSelectedCurrency] = useState(localStorage.getItem('selectedCurrency') || 'Peso');
+  const [valorGeneral, setValorGeneral] = useState(parseFloat(localStorage.getItem('valorGeneral')) || 1);
+
+  const handleCurrencyChange = (currency, value) => {
+    setSelectedCurrency(currency);
+    setValorGeneral(value);
+    localStorage.setItem('selectedCurrency', currency);
+    localStorage.setItem('valorGeneral', value.toString());
+  };
+
+  useEffect(() => {
+    const storedCurrency = localStorage.getItem('selectedCurrency');
+    const storedValue = localStorage.getItem('valorGeneral');
+    if (storedCurrency && storedValue) {
+      setSelectedCurrency(storedCurrency);
+      setValorGeneral(parseFloat(storedValue));
+    }
+  }, []);
 
   return (
     <AuthProvider>
@@ -34,12 +52,12 @@ function App() {
           <ThemeProvider theme={theme}>
             <CssBaseline />
             <div className="app">
-              <Navbar />
+              <Navbar onCurrencyChange={handleCurrencyChange} />
               <main className="content">
                 <Routes>
-                  <Route path="/" element={<Principal/>} />
+                  <Route path="/" element={<Principal selectedCurrency={selectedCurrency} valorGeneral={valorGeneral} />} />
                   <Route path="/PProducto" element={<PProducto />} />
-                  <Route path="/carrito" element={<Carrito/>} />
+                  <Route path="/carrito" element={<Carrito />} />
                   <Route path="/crud" element={<Crud />} /> 
                   <Route path="/empleados" element={<Empleados />} />
                   <Route path="/envios" element={<Envios />} />

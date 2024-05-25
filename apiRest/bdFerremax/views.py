@@ -19,24 +19,71 @@ from django.http import JsonResponse
 from django.views import View
 import requests
 
-class ValorDolarView(View):
+class ValorDolarView(View): #extrae lista la invirte para que parta de la fecha mas reciente y escoje la primera que no sea NaN
     def get(self, request, *args, **kwargs):
+        moneda = request.GET.get('moneda')
         hoy = datetime.now()
-        first_date = hoy - timedelta(days=5)
+        first_date = hoy - timedelta(days=5) 
         first_date_string = first_date.strftime('%Y-%m-%d') 
-        fecha_valor = hoy - timedelta(days=4)
-        fecha_valor_string = fecha_valor.strftime('%d-%m-%Y')
         url = f"https://si3.bcentral.cl/SieteRestWS/SieteRestWS.ashx?user=ivostambuk7@gmail.com&pass=2749Ivostambuk&firstdate={first_date_string}&timeseries=F073.TCO.PRE.Z.D&function=GetSeries"
         print(url)
         try:
             response = requests.get(url)
             response.raise_for_status()
             data = response.json()
-            observacion = next((obs for obs in data['Series']['Obs'] if obs['indexDateString'] == fecha_valor_string), None)
+            observaciones = data['Series']['Obs']
+            observaciones.reverse() 
+            observacion = next((obs for obs in observaciones if obs['value'] != 'NaN'), None)
             if observacion:
                 return JsonResponse({'valor': float(observacion['value'])})
             else:
-                return JsonResponse({'error': f"No se encontró el valor para la fecha {fecha_valor_string}"}, status=404)
+                return JsonResponse({'error': "No se encontró un valor válido en los últimos 5 días"}, status=404)
+        except requests.HTTPError as http_err:
+            return JsonResponse({'error': f"Error en la solicitud: {http_err}"}, status=400)
+        except Exception as err:
+            return JsonResponse({'error': f"Hubo un problema con la solicitud: {err}"}, status=500)
+
+class ValorEuroView(View):
+    def get(self, request, *args, **kwargs):
+        hoy = datetime.now()
+        first_date = hoy - timedelta(days=5) 
+        first_date_string = first_date.strftime('%Y-%m-%d') 
+        url = f"https://si3.bcentral.cl/SieteRestWS/SieteRestWS.ashx?user=ivostambuk7@gmail.com&pass=2749Ivostambuk&firstdate={first_date_string}&timeseries=F072.CLP.EUR.N.O.D&function=GetSeries"
+        print(url)
+        try:
+            response = requests.get(url)
+            response.raise_for_status()
+            data = response.json()
+            observaciones = data['Series']['Obs']
+            observaciones.reverse() 
+            observacion = next((obs for obs in observaciones if obs['value'] != 'NaN'), None)
+            if observacion:
+                return JsonResponse({'valor': float(observacion['value'])})
+            else:
+                return JsonResponse({'error': "No se encontró un valor válido en los últimos 5 días"}, status=404)
+        except requests.HTTPError as http_err:
+            return JsonResponse({'error': f"Error en la solicitud: {http_err}"}, status=400)
+        except Exception as err:
+            return JsonResponse({'error': f"Hubo un problema con la solicitud: {err}"}, status=500)
+        
+class ValorArgView(View):
+    def get(self, request, *args, **kwargs):
+        hoy = datetime.now()
+        first_date = hoy - timedelta(days=5) 
+        first_date_string = first_date.strftime('%Y-%m-%d') 
+        url = f"https://si3.bcentral.cl/SieteRestWS/SieteRestWS.ashx?user=ivostambuk7@gmail.com&pass=2749Ivostambuk&firstdate={first_date_string}&timeseries=F072.CLP.ARS.N.O.D&function=GetSeries"
+        print(url)
+        try:
+            response = requests.get(url)
+            response.raise_for_status()
+            data = response.json()
+            observaciones = data['Series']['Obs']
+            observaciones.reverse() 
+            observacion = next((obs for obs in observaciones if obs['value'] != 'NaN'), None)
+            if observacion:
+                return JsonResponse({'valor': float(observacion['value'])})
+            else:
+                return JsonResponse({'error': "No se encontró un valor válido en los últimos 5 días"}, status=404)
         except requests.HTTPError as http_err:
             return JsonResponse({'error': f"Error en la solicitud: {http_err}"}, status=400)
         except Exception as err:

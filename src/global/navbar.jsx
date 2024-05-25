@@ -1,31 +1,34 @@
-import { Box, IconButton, Button, InputBase } from "@mui/material";
+import { Box, IconButton, InputBase, Select, MenuItem } from "@mui/material";
 import { ColorModeContext, tokens } from "../theme";
 import { useTheme } from '@mui/material/styles';
 import { useNavigate } from 'react-router-dom';
-import React, { useContext } from 'react';
+import React, { useState, useContext } from 'react';
 import { AuthContext } from '../components/AuthContext';
 
 import Logo from '../Static/Ferremax_logo_trasparente.png';
 import LightModeOutlinedIcon from "@mui/icons-material/LightModeOutlined";
 import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
 import NotificationsOutlinedIcon from "@mui/icons-material/NotificationsOutlined";
-import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
-import PersonOutlinedIcon from "@mui/icons-material/PersonOutlined";
+import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
+import PersonOutlinedIcon from '@mui/icons-material/PersonOutlined';
 import ShoppingCartOutlinedIcon from '@mui/icons-material/ShoppingCartOutlined';
 import SearchIcon from "@mui/icons-material/Search";
+import MonetizationOnOutlinedIcon from '@mui/icons-material/MonetizationOnOutlined';
 
+import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 
-const Navbar = () => {
+const Navbar = ({ onCurrencyChange }) => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
   const colorMode = useContext(ColorModeContext);
   const navigate = useNavigate();
-  const [open, setOpen] = React.useState(false);
+  const [openDialog, setOpenDialog] = useState(false);
+  const [selectedCurrency, setSelectedCurrency] = useState(localStorage.getItem('selectedCurrency') || 'Peso');
   const { isLoggedIn, logOut, setUserEmail } = useContext(AuthContext);
 
   const irACarrito = () => {
@@ -39,14 +42,13 @@ const Navbar = () => {
   const iraRegistro = () => {
     navigate('/registro');
   };
-  
 
   const handleClickOpen = () => {
-    setOpen(true);
+    setOpenDialog(true);
   };
 
   const handleClose = () => {
-    setOpen(false);
+    setOpenDialog(false);
   };
 
   const handleLogout = () => {
@@ -64,7 +66,45 @@ const Navbar = () => {
       iraRegistro();
     }
   };
-//por ahora buscar es solo un placeholder ya que se tiene pensado implementar un buscador funcional
+
+  const handleSelectChange = async (event) => {
+    const selectedCurrency = event.target.value;
+    setSelectedCurrency(selectedCurrency);
+
+    let url;
+    let valorGeneral;
+    switch (selectedCurrency) {
+        case 'Dolar':
+            url = 'http://localhost:8000/valor-dolar/';
+            break;
+        case 'Euro':
+            url = 'http://localhost:8000/valor-euro/';
+            break;
+        case 'Arg':
+            url = 'http://localhost:8000/valor-arg/';
+            break;
+        case 'Peso':
+            valorGeneral = 1;
+            localStorage.setItem('valorGeneral', valorGeneral);
+            localStorage.setItem('selectedCurrency', 'Peso');
+            onCurrencyChange('Peso', valorGeneral);
+            return;
+        default:
+            return;
+    }
+
+    try {
+        const response = await fetch(url);
+        const data = await response.json();
+        valorGeneral = data.valor;
+        localStorage.setItem('valorGeneral', valorGeneral);
+        localStorage.setItem('selectedCurrency', selectedCurrency);
+        onCurrencyChange(selectedCurrency, valorGeneral);
+    } catch (error) {
+        console.error("Error getting currency value: ", error);
+    }
+  };
+
   return (
     <Box display="flex" justifyContent="space-between" p={2}>
       <Box display="flex" borderRadius="3px">
@@ -80,7 +120,7 @@ const Navbar = () => {
         </IconButton>
       </Box>
 
-      <Dialog open={open} onClose={handleClose}>
+      <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
         <DialogTitle>Cerrar sesión</DialogTitle>
         <DialogContent>
           <DialogContentText>
@@ -97,9 +137,16 @@ const Navbar = () => {
         <IconButton type="button" sx={{ p: 1 }} onClick={irACarrito}>
           <ShoppingCartOutlinedIcon />
         </IconButton>
-        <IconButton type="button" sx={{ p: 1 }}>
-          <SettingsOutlinedIcon />
-        </IconButton>
+        <Select
+          value={selectedCurrency}
+          onChange={handleSelectChange}
+          sx={{ p: 1 }}
+        >
+          <MenuItem value={'Dolar'}>Dolar</MenuItem>
+          <MenuItem value={'Euro'}>Euro</MenuItem>
+          <MenuItem value={'Arg'}>Arg</MenuItem>
+          <MenuItem value={'Peso'}>Peso Chileno</MenuItem>
+        </Select>
         <IconButton type="button" sx={{ p: 1 }}>
           <NotificationsOutlinedIcon />
         </IconButton>
