@@ -75,7 +75,7 @@ const Carrito = () => {
   const disminuirCantidad = (producto) => {
     axios.put(`http://localhost:8000/productos-carrito/${producto.productoCarritoId}/`, {
       producto: producto.id,
-      cantidad: Math.max(0, producto.cantidad - 1),
+      cantidad: Math.max(1, producto.cantidad - 1),
     }, {
       headers: {
         'Authorization': `Token ${token}`

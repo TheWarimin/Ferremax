@@ -141,7 +141,7 @@ const Navbar = ({ onCurrencyChange }) => {
         >
           <MenuItem value={'Dolar'}>Dolar</MenuItem>
           <MenuItem value={'Euro'}>Euro</MenuItem>
-          <MenuItem value={'Arg'}>Arg</MenuItem>
+          <MenuItem value={'Arg'}>Peso Argentino</MenuItem>
           <MenuItem value={'Peso'}>Peso Chileno</MenuItem>
         </Select>
         <IconButton type="button" sx={{ p: 1 }} onClick={irACarrito}>
