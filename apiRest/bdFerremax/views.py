@@ -21,7 +21,6 @@ import requests
 
 class ValorDolarView(View): #extrae lista la invirte para que parta de la fecha mas reciente y escoje la primera que no sea NaN
     def get(self, request, *args, **kwargs):
-        moneda = request.GET.get('moneda')
         hoy = datetime.now()
         first_date = hoy - timedelta(days=5) 
         first_date_string = first_date.strftime('%Y-%m-%d') 

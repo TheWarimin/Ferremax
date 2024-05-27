@@ -31,7 +31,7 @@ const Footer = () => {
     return (
       <Box sx={{ p: 2, mt: 'auto', textAlign: 'center' }}>
         <Typography variant="body1" color="white">
-          © 2023 Tu Empresa. Todos los derechos reservados.
+          © 2024 Ferremax. Todos los derechos reservados.
         </Typography>
         {confirmation && <Alert severity="success">{confirmation}</Alert>}
         <Button color="primary" onClick={handleOpen}>Contacto</Button>
