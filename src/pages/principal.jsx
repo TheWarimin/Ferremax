@@ -12,7 +12,6 @@ import '../style/principal.css';
 import UserContext from '../components/UserContext';
 import axios from 'axios';
 
-
 const ProductCard = ({ product, addToCart, userEmail }) => (
     <Card onClick={() => addToCart(product, userEmail)}
         variant="outlined" 
@@ -42,7 +41,7 @@ const ProductCard = ({ product, addToCart, userEmail }) => (
     </Card>
 );
 
-const Principal = () => {
+const Principal = ({ selectedCurrency, valorGeneral }) => {
     const { isLoggedIn } = useContext(AuthContext);
     const [products, setProducts] = useState([]);
     const [selectedCategory, setSelectedCategory] = useState('');
@@ -52,40 +51,44 @@ const Principal = () => {
 
     useEffect(() => {
         const storedEmail = localStorage.getItem('userEmail');
-        const token = localStorage.getItem('token'); // Recupera el token del almacenamiento local
-        console.log('Token from localStorage: ', token); // Verifica el token recuperado
+        const token = localStorage.getItem('token');
         if (storedEmail) {
             setUserEmail(storedEmail);
-            console.log('User email from localStorage: ', storedEmail); // Verifica el correo electrónico almacenado
-        } else {
-            console.warn('No user email found in localStorage');
         }
-    
+
         const getProducts = async () => {
             try {
-                const response = await axios.get('http://localhost:8000/Producto/', {
-                    headers: {
-                       // 'Authorization': `Token ${token}` // Usa el token recuperado
-                    }
-                });
-                const categoria = await axios.get('http://localhost:8000/Categoria/', {
-                    headers: {
-                      //  'Authorization': `Token ${token}` // Usa el token recuperado
-                    }
-                });
+                const response = await axios.get('http://localhost:8000/Producto/');
+                const categoria = await axios.get('http://localhost:8000/Categoria/');
                 if (response.status === 200) {
-                    setProducts(response.data);
+                    const updatedProducts = response.data.map(product => {
+                        let newPrice;
+                        switch (selectedCurrency) {
+                            case 'Dolar':
+                            case 'Euro':
+                                newPrice = parseFloat((product.precio / valorGeneral).toFixed(2));
+                                break;
+                            case 'Arg':
+                            case 'Peso':
+                                newPrice = product.precio * valorGeneral;
+                                break;
+                            default:
+                                return product;
+                        }
+                        return {
+                            ...product,
+                            precio: newPrice
+                        };
+                    });
+                    setProducts(updatedProducts);
                     setCategories(categoria.data);
-                    //console.log('Products: ', response.data); // Verifica los productos obtenidos
-                    //console.log('Categories: ', categoria.data); // Verifica las categorías obtenidas
                 }
             } catch (error) {
-                console.error("Error getting documents: ", error);
+                console.error("Error getting products: ", error);
             }
         };
-    
         getProducts();
-    }, []);
+    }, [selectedCurrency, valorGeneral]);
 
     const addToCart = async (producto, userEmail) => {
         if (!isLoggedIn) {
@@ -125,7 +128,7 @@ const Principal = () => {
             console.error('Error adding product to cart: ', error);
         }
     };
-    
+
     const settings = {
         dots: true,
         infinite: true,
@@ -158,13 +161,17 @@ const Principal = () => {
             <Select
                 value={selectedCategory}
                 onChange={(event) => setSelectedCategory(event.target.value)}
-                style={{ marginTop: '20px', display: 'block', width: '100px' }}
+                style={{ marginTop: '20px', display: 'block', width: '14%', minWidth: '220px', marginLeft: '30px' }}
+                displayEmpty
             >
-                <MenuItem value="">Todas las categorías</MenuItem>
+                <MenuItem value="">
+                    <em>Todas las categorías</em>
+                </MenuItem>
                 {categories.map((category) => (
                     <MenuItem key={category.id} value={category.id}>{category.nombre}</MenuItem>
                 ))}
             </Select>
+
 
             <Typography variant="h5" style={{ marginTop: '40px', textAlign: 'center' }}>Catálogo</Typography>
 

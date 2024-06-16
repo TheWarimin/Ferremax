@@ -75,3 +75,25 @@ class ProductoCarrito(models.Model):
     carrito = models.ForeignKey(Carrito, on_delete=models.CASCADE)
     producto = models.ForeignKey(Producto, on_delete=models.CASCADE)
     cantidad = models.IntegerField(default=1)
+
+    def incrementar_cantidad(self, cantidad=1):
+        self.cantidad += cantidad
+        self.save()
+
+    def disminuir_cantidad(self, cantidad=1):
+        self.cantidad = max(0, self.cantidad - cantidad)
+        self.save()
+
+    def eliminar(self):
+        self.delete()
+        
+class WebpayTransaction(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    token = models.CharField(max_length=64, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+class WebpayTransactionItem(models.Model):
+    transaction = models.ForeignKey(WebpayTransaction, related_name='items', on_delete=models.CASCADE)
+    product = models.ForeignKey(Producto, on_delete=models.CASCADE)
+    quantity = models.IntegerField()

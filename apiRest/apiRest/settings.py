@@ -50,17 +50,16 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'bdFerremax',
     'rest_framework',
     'rest_framework.authtoken',
     'corsheaders',
-
+    'bdFerremax',
 ]
 
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -132,22 +131,27 @@ USE_I18N = True
 USE_TZ = True
 
 
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'localhost:3000']
+
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
 STATIC_URL = 'static/'
 
 MEDIA_URL = '/productos/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'apiRest', 'productos')
 
-# Default primary key field type
-# https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
+CORS_ORIGIN_ALLOW_ALL = True
 
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+CORS_ALLOW_CREDENTIALS = True
 
-CORS_ALLOW_ALL_ORIGINS = True
-
-# CORS_ALLOW_ORIGINS = [
+#CORS_ORIGIN_WHITELIST = [
 #    "http://localhost:3000",
 #    "http://localhost:8000",
-#    ]
+#    "https://si3.bcentral.cl",
+#]
+
+#CORS_ALLOWED_ORIGINS = [
+#    "http://localhost:3000",
+#    "http://localhost:8000",
+#    "https://si3.bcentral.cl"
+#]

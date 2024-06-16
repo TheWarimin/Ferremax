@@ -1,6 +1,20 @@
 from rest_framework import serializers
-from .models import Marca, Categoria, Producto, CustomUser, Carrito, ProductoCarrito
+from .models import Marca, Categoria, Producto, CustomUser, Carrito, ProductoCarrito, WebpayTransactionItem, WebpayTransaction
 
+class WebpayTransactionItemSerializer(serializers.ModelSerializer):
+    product_name = serializers.CharField(source='product.nombre')
+    product_price = serializers.DecimalField(source='product.precio', max_digits=10, decimal_places=2)
+    
+    class Meta:
+        model = WebpayTransactionItem
+        fields = ['product_name', 'product_price', 'quantity']
+
+class WebpayTransactionSerializer(serializers.ModelSerializer):
+    items = WebpayTransactionItemSerializer(many=True, read_only=True)
+    
+    class Meta:
+        model = WebpayTransaction
+        fields = ['user', 'amount', 'token', 'created_at', 'items']
 
 class MarcaSerializer(serializers.ModelSerializer):
     class Meta:
