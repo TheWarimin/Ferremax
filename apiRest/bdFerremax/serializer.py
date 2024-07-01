@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from django.contrib.auth import get_user_model
 from .models import Marca, Categoria, Producto, CustomUser, Carrito, ProductoCarrito, WebpayTransactionItem, WebpayTransaction, Empleado, EMPLOYEE_ROLES
 
 class WebpayTransactionItemSerializer(serializers.ModelSerializer):
@@ -31,21 +32,28 @@ class ProductoSerializer(serializers.ModelSerializer):
         model = Producto
         fields = '__all__'
 
+User = get_user_model()
+
 class CustomUserSerializer(serializers.ModelSerializer):
-    groups = serializers.SerializerMethodField()
-    employee_role = serializers.ChoiceField(choices=EMPLOYEE_ROLES, required=False, allow_blank=True)
-
     class Meta:
-        model = CustomUser
-        fields = ['id', 'email', 'username', 'direccion', 'telefono', 'is_employee', 'employee_role', 'groups']
+        model = User
+        fields = ['id', 'email', 'username', 'direccion', 'telefono', 'is_employee', 'employee_role', 'password']
+        extra_kwargs = {
+            'password': {'write_only': True}
+        }
 
-    def get_groups(self, obj):
-        return [group.name for group in obj.groups.all()]
-
-    def validate(self, data):
-        if data.get('employee_role') and not data.get('is_employee'):
-            raise serializers.ValidationError("Cannot assign an employee role to a non-employee user.")
-        return data
+    def create(self, validated_data):
+        user = User.objects.create_user(
+            email=validated_data['email'],
+            username=validated_data['username'],
+            direccion=validated_data.get('direccion', ''),
+            telefono=validated_data.get('telefono', ''),
+            is_employee=validated_data.get('is_employee', False),
+            employee_role=validated_data.get('employee_role', '')
+        )
+        user.set_password(validated_data['password'])
+        user.save()
+        return user
 
 class EmpleadoSerializer(serializers.ModelSerializer):
     class Meta:
