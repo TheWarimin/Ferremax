@@ -22,7 +22,8 @@
     border-radius: 50px;
     position: absolute;
     width: 230px;
-    top: calc(50% - 200px); 
+    top: calc(43% - 200px); 
+    margin-bottom: 2%;
     left: 50%; 
     transform: translate(-50%, -50%);
     z-index: 1;
