@@ -1,16 +1,16 @@
 import random
 from rest_framework.decorators import action
 from django.contrib.auth import authenticate, login, logout
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.authtoken.models import Token
 from rest_framework import viewsets, generics
-from .serializer import WebpayTransactionSerializer, WebpayTransactionItemSerializer, MarcaSerializer, CustomUserSerializer, CategoriaSerializer, ProductoSerializer, CustomUserSerializer, CarritoSerializer, ProductoCarritoSerializer, ProductoSerializer
-from .models import Marca, CustomUser, Categoria, Producto, CustomUser, Carrito, ProductoCarrito, WebpayTransaction, WebpayTransactionItem
+from .serializer import WebpayTransactionSerializer, WebpayTransactionItemSerializer, MarcaSerializer, CategoriaSerializer, ProductoSerializer, CustomUserSerializer, CarritoSerializer, ProductoCarritoSerializer, ProductoSerializer
+from .models import Marca, Categoria, Producto, CustomUser, Carrito, ProductoCarrito, WebpayTransaction, WebpayTransactionItem
+from django.contrib.auth.models import Group
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.views import APIView
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from transbank.webpay.webpay_plus.transaction import Transaction
 from transbank.webpay.webpay_plus.transaction import Transaction
 from django.shortcuts import get_object_or_404
@@ -18,6 +18,15 @@ from datetime import datetime, timedelta
 from django.http import JsonResponse
 from django.views import View
 import requests
+
+class UserGroupsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        user = request.user
+        groups = user.groups.all()
+        group_names = [group.name for group in groups]
+        return Response({'groups': group_names})
 
 class ValorDolarView(View): #extrae lista la invirte para que parta de la fecha mas reciente y escoje la primera que no sea NaN
     def get(self, request, *args, **kwargs):

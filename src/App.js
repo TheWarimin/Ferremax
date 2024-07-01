@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { CssBaseline, ThemeProvider } from "@mui/material";
-import { Route, Routes } from "react-router-dom";
+import { Route, Routes, useLocation } from "react-router-dom";
 import { ColorModeContext, useMode } from "./theme";
 
 import Navbar from "./global/navbar";
-import Sidebar from "./global/Sidebar";
+import SidebarComponent from "./global/Sidebar";
 import Principal from "./pages/principal";
 import PProducto from "./pages/productos";
 import Carrito from "./pages/carrito";
@@ -30,6 +30,8 @@ function App() {
   const [selectedCurrency, setSelectedCurrency] = useState(localStorage.getItem('selectedCurrency') || 'Peso');
   const [valorGeneral, setValorGeneral] = useState(parseFloat(localStorage.getItem('valorGeneral')) || 1);
 
+  const location = useLocation();
+  
   const handleCurrencyChange = (currency, value) => {
     setSelectedCurrency(currency);
     setValorGeneral(value);
@@ -46,6 +48,18 @@ function App() {
     }
   }, []);
 
+  const shouldDisplaySidebar = () => {
+    const routesWithSidebar = [
+      '/usuarios',
+      '/empleados',
+      '/inventario',
+      '/pedidos',
+      '/envios',
+      '/reportes'
+    ];
+    return routesWithSidebar.includes(location.pathname);
+  };
+
   return (
     <AuthProvider>
       <UserContext.Provider value={userEmail}>
@@ -54,25 +68,28 @@ function App() {
             <CssBaseline />
             <div className="app" style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
               <Navbar onCurrencyChange={handleCurrencyChange} />
-              <main className="content" style={{ flex: '1' }}>
-                <Routes>
-                  <Route path="/" element={<Principal selectedCurrency={selectedCurrency} valorGeneral={valorGeneral} />} />
-                  <Route path="/PProducto" element={<PProducto />} />
-                  <Route path="/carrito" element={<Carrito />} />
-                  <Route path="/crud" element={<Crud />} /> 
-                  <Route path="/empleados" element={<Empleados />} />
-                  <Route path="/envios" element={<Envios />} />
-                  <Route path="/inventario" element={<Inventario />} />
-                  <Route path="/pedidos" element={<Pedidos />} />
-                  <Route path="/reportes" element={<Reportes />} />
-                  <Route path="/usuarios" element={<Usuarios />} />
-                  <Route path="/show" element={<Show />} />
-                  <Route path="/edit/:id" element={<Edit />} />
-                  <Route path="/create" element={<Create />} />
-                  <Route path="/registro" element={<Registro />} />
-                  <Route path="/login" element={<Login />} />
-                </Routes>
-              </main>
+              <div style={{ display: 'flex', flex: 1, position: 'relative' }}>
+                {shouldDisplaySidebar() && <SidebarComponent />}
+                <main className="content" style={{ flex: 1, marginLeft: shouldDisplaySidebar() ? '1px' : '0', transition: 'margin-left 0.3s' }}>
+                  <Routes>
+                    <Route path="/" element={<Principal selectedCurrency={selectedCurrency} valorGeneral={valorGeneral} />} />
+                    <Route path="/PProducto" element={<PProducto />} />
+                    <Route path="/carrito" element={<Carrito />} />
+                    <Route path="/crud" element={<Crud />} /> 
+                    <Route path="/empleados" element={<Empleados />} />
+                    <Route path="/envios" element={<Envios />} />
+                    <Route path="/inventario" element={<Inventario />} />
+                    <Route path="/pedidos" element={<Pedidos />} />
+                    <Route path="/reportes" element={<Reportes />} />
+                    <Route path="/usuarios" element={<Usuarios />} />
+                    <Route path="/show" element={<Show />} />
+                    <Route path="/edit/:id" element={<Edit />} />
+                    <Route path="/create" element={<Create />} />
+                    <Route path="/registro" element={<Registro />} />
+                    <Route path="/login" element={<Login />} />
+                  </Routes>
+                </main>
+              </div>
               <Footer /> 
             </div>
           </ThemeProvider>

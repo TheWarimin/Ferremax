@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Marca, Categoria, Producto, CustomUser, Carrito, ProductoCarrito, WebpayTransactionItem, WebpayTransaction
+from .models import Marca, Categoria, Producto, CustomUser, Carrito, ProductoCarrito, WebpayTransactionItem, WebpayTransaction, Empleado, EMPLOYEE_ROLES
 
 class WebpayTransactionItemSerializer(serializers.ModelSerializer):
     product_name = serializers.CharField(source='product.nombre')
@@ -32,14 +32,26 @@ class ProductoSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class CustomUserSerializer(serializers.ModelSerializer):
+    groups = serializers.SerializerMethodField()
+    employee_role = serializers.ChoiceField(choices=EMPLOYEE_ROLES, required=False, allow_blank=True)
+
     class Meta:
         model = CustomUser
-        fields = ('id', 'email', 'username', 'password', 'direccion', 'telefono')
-        extra_kwargs = {'password': {'write_only': True}}
+        fields = ['id', 'email', 'username', 'direccion', 'telefono', 'is_employee', 'employee_role', 'groups']
 
-    def create(self, validated_data):
-        user = CustomUser.objects.create_user(**validated_data)
-        return user
+    def get_groups(self, obj):
+        return [group.name for group in obj.groups.all()]
+
+    def validate(self, data):
+        if data.get('employee_role') and not data.get('is_employee'):
+            raise serializers.ValidationError("Cannot assign an employee role to a non-employee user.")
+        return data
+
+class EmpleadoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Empleado
+        fields = ['user', 'role']
+    
 class ProductoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Producto

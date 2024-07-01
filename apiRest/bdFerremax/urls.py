@@ -1,7 +1,7 @@
 from django.urls import path, include
 from rest_framework import routers
 from bdFerremax import views
-from .views import ValorArgView, ValorEuroView, ValorDolarView, WebpayTransactionViewSet, WebpayTransactionItemViewSet, AddToCartView, customUserViewSet, CustomUserCreate, MarcaViewSet, CategoriaViewSet, ProductoViewSet, CarritoViewSet, ProductoCarritoViewSet, WebpayView, WebpayReturnView
+from .views import UserGroupsView, ValorArgView, ValorEuroView, ValorDolarView, WebpayTransactionViewSet, WebpayTransactionItemViewSet, AddToCartView, customUserViewSet, CustomUserCreate, MarcaViewSet, CategoriaViewSet, ProductoViewSet, CarritoViewSet, ProductoCarritoViewSet, WebpayView, WebpayReturnView
 
 router = routers.DefaultRouter()
 router.register(r'marca', views.MarcaViewSet, 'marca')
@@ -15,6 +15,7 @@ router.register(r'webpaytransactions', WebpayTransactionViewSet, 'webpaytransact
 
 urlpatterns = [
     path('', include(router.urls)),
+    path('user-groups/', UserGroupsView.as_view(), name='user-groups'),
     path('valor-arg/', ValorArgView.as_view(), name='valor-arg'),
     path('valor-euro/', ValorEuroView.as_view(), name='valor-euro'),
     path('valor-dolar/', ValorDolarView.as_view(), name='valor-dolar'),

@@ -1,6 +1,6 @@
 from django.db import models
 from django.utils.crypto import get_random_string
-from django.contrib.auth.models import AbstractUser, Group, Permission, BaseUserManager
+from django.contrib.auth.models import AbstractUser, Group, Permission
 from django.utils.translation import gettext_lazy as _
 
 class Marca(models.Model):
@@ -36,6 +36,9 @@ class CustomUser(AbstractUser):
     email = models.EmailField(unique=True)
     direccion = models.CharField(max_length=255, null=True, blank=True)
     telefono = models.CharField(max_length=20, null=True, blank=True)
+    is_employee = models.BooleanField(default=False)
+    employee_role = models.CharField(max_length=50, null=True, blank=True)
+
     groups = models.ManyToManyField(
         Group,
         verbose_name=_('groups'),
@@ -61,13 +64,17 @@ class CustomUser(AbstractUser):
     REQUIRED_FIELDS = ['username']
 
     def save(self, *args, **kwargs):
+        if self.employee_role and not self.is_employee:
+            raise ValueError("Cannot assign an employee role to a non-employee user.")
         super().save(*args, **kwargs)
         Carrito.objects.get_or_create(usuario=self)
+    
     def __str__(self):
         return self.email
 
 class Carrito(models.Model):
     usuario = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
+    
     def __str__(self):
         return self.usuario.email
 
@@ -86,7 +93,7 @@ class ProductoCarrito(models.Model):
 
     def eliminar(self):
         self.delete()
-        
+
 class WebpayTransaction(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
@@ -97,3 +104,19 @@ class WebpayTransactionItem(models.Model):
     transaction = models.ForeignKey(WebpayTransaction, related_name='items', on_delete=models.CASCADE)
     product = models.ForeignKey(Producto, on_delete=models.CASCADE)
     quantity = models.IntegerField()
+
+# Empleado roles
+EMPLOYEE_ROLES = (
+    ('bodeguero', 'Bodeguero'),
+    ('cajero', 'Cajero'),
+    ('contador', 'Contador'),
+    ('administrador', 'Administrador'),
+    # Agregar más roles si es necesario
+)
+
+class Empleado(models.Model):
+    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
+    role = models.CharField(max_length=50, choices=EMPLOYEE_ROLES)
+
+    def __str__(self):
+        return f"{self.user.email} - {self.get_role_display()}"
