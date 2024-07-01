@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import axios from 'axios';
-import { Button, IconButton, Table, TableHead, TableRow, TableCell, TableBody, TableContainer, Paper, TextField, Grid, TablePagination, Checkbox } from '@mui/material';
+import { Button, IconButton, Table, TableHead, TableRow, TableCell, TableBody, TableContainer, Paper, TextField, Grid, TablePagination, Checkbox, Typography } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 
 const Show = () => {
@@ -15,6 +15,8 @@ const Show = () => {
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(5);
     const [selectedProductId, setSelectedProductId] = useState(null);
+    const [brandError, setBrandError] = useState('');
+    const [categoryError, setCategoryError] = useState('');
 
     const getCategories = async () => {
         try {
@@ -71,15 +73,26 @@ const Show = () => {
         }
     };
 
+    const validateBrand = () => {
+        if (!newBrand.trim()) {
+            setBrandError("La marca es requerida.");
+            return false;
+        }
+        setBrandError('');
+        return true;
+    };
+
     const addBrand = async () => {
-        try {
-            const response = await axios.post('http://localhost:8000/marca/', { nombre: newBrand });
-            if (response.status === 201) {
-                setNewBrand('');
-                await getBrandsAndCategories();
+        if (validateBrand()) {
+            try {
+                const response = await axios.post('http://localhost:8000/marca/', { nombre: newBrand });
+                if (response.status === 201) {
+                    setNewBrand('');
+                    await getBrandsAndCategories();
+                }
+            } catch (error) {
+                console.error("Error adding brand: ", error);
             }
-        } catch (error) {
-            console.error("Error adding brand: ", error);
         }
     };
 
@@ -92,15 +105,26 @@ const Show = () => {
         }
     };
 
+    const validateCategory = () => {
+        if (!newCategory.trim()) {
+            setCategoryError("La categoría es requerida.");
+            return false;
+        }
+        setCategoryError('');
+        return true;
+    };
+
     const addCategory = async () => {
-        try {
-            const response = await axios.post('http://localhost:8000/Categoria/', { nombre: newCategory });
-            if (response.status === 201) {
-                setNewCategory('');
-                await getBrandsAndCategories();
+        if (validateCategory()) {
+            try {
+                const response = await axios.post('http://localhost:8000/Categoria/', { nombre: newCategory });
+                if (response.status === 201) {
+                    setNewCategory('');
+                    await getBrandsAndCategories();
+                }
+            } catch (error) {
+                console.error("Error adding category: ", error);
             }
-        } catch (error) {
-            console.error("Error adding category: ", error);
         }
     };
 
@@ -245,6 +269,8 @@ const Show = () => {
                         value={newBrand}
                         onChange={(e) => setNewBrand(e.target.value)}
                         style={{ marginTop: '10px', width: '100%' }}
+                        error={!!brandError}
+                        helperText={brandError}
                     />
                     <Button variant="contained" color="primary" onClick={addBrand} style={{ marginTop: '10px' }}>
                         Agregar Marca
@@ -278,6 +304,8 @@ const Show = () => {
                         value={newCategory}
                         onChange={(e) => setNewCategory(e.target.value)}
                         style={{ marginTop: '10px', width: '100%' }}
+                        error={!!categoryError}
+                        helperText={categoryError}
                     />
                     <Button variant="contained" color="primary" onClick={addCategory} style={{ marginTop: '10px' }}>
                         Agregar Categoría
