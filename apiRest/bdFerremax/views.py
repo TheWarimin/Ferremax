@@ -12,7 +12,6 @@ from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from transbank.webpay.webpay_plus.transaction import Transaction
-from transbank.webpay.webpay_plus.transaction import Transaction
 from django.shortcuts import get_object_or_404
 from datetime import datetime, timedelta
 from django.http import JsonResponse

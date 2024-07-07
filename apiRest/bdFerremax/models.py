@@ -66,6 +66,9 @@ class CustomUser(AbstractUser):
     def save(self, *args, **kwargs):
         if self.employee_role and not self.is_employee:
             raise ValueError("Cannot assign an employee role to a non-employee user.")
+        if self.employee_role == 'administrador':
+            self.is_staff = True
+            self.is_superuser = True
         super().save(*args, **kwargs)
         Carrito.objects.get_or_create(usuario=self)
     

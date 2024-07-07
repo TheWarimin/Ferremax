@@ -17,7 +17,7 @@ const Carrito = () => {
           'Authorization': `Token ${token}`
         }
       });
-
+  
       const userCarrito = response.data.find(carrito => carrito.usuario === userEmail);
       if (userCarrito) {
         const productPromises = userCarrito.productos.map(item =>
@@ -111,36 +111,39 @@ const Carrito = () => {
     const user_id = localStorage.getItem('user_id');
     const products = carrito.map(producto => ({ id: producto.id, quantity: producto.cantidad }));
     const return_url = 'http://localhost:3000/PProducto/';
+    
     try {
-        const response = await fetch('http://localhost:8000/webpay/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Token ${token}`
-            },
-            body: JSON.stringify({
-                user_id: user_id,
-                amount: totalCLP,
-                products: products,
-                return_url: return_url,
-            })
-        });
-        const data = await response.json();
-        console.log('Success:', data);
-        setTokenWs(data.retorno_webpay.token);
-        let div = document.createElement('div');
-        div.innerHTML = `
-            <form method="post" action="${data.retorno_webpay.url}">
-                <input type="hidden" name="token_ws" value="${data.retorno_webpay.token}" />
-                <input type="submit" value="Ir a pagar" />
-            </form>
-        `;
-        document.body.appendChild(div);
-        div.querySelector('form').submit();
+      const response = await fetch('http://localhost:8000/webpay/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Token ${token}`
+        },
+        body: JSON.stringify({
+          user_id: user_id,
+          amount: totalCLP,
+          products: products,
+          return_url: return_url,
+        })
+      });
+      
+      const data = await response.json();
+      console.log('Success:', data);
+      setTokenWs(data.retorno_webpay.token);
+      let div = document.createElement('div');
+      div.innerHTML = `
+        <form method="post" action="${data.retorno_webpay.url}">
+          <input type="hidden" name="token_ws" value="${data.retorno_webpay.token}" />
+          <input type="submit" value="Ir a pagar" />
+        </form>
+      `;
+      document.body.appendChild(div);
+      div.querySelector('form').submit();
     } catch (error) {
-        console.error('Error:', error);
+      console.error('Error:', error);
     }
   };
+  
   
 
   const totalCLP = carrito.reduce((total, producto) => total + producto.precio * producto.cantidad, 0);
