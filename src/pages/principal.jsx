@@ -1,7 +1,9 @@
-import { Grid, CardActionArea, Card, CardContent, Typography, MenuItem, Select } from '@mui/material';
+import { Grid, CardActionArea, Card, CardContent, Typography, MenuItem, Select, Button, Box } from '@mui/material';
+import { CheckCircle } from '@mui/icons-material';
 import React, { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../components/AuthContext';
 import { Carousel } from 'react-responsive-carousel';
+import { useNavigate } from 'react-router-dom'; 
 import imagen1 from '../Static/Banner_Ferremax_Mesa-de-trabajo-1.jpg';
 import imagen2 from '../Static/Banner_Ferremax_Mesa-de-trabajo-2.jpg';
 import Slider from "react-slick";
@@ -12,34 +14,61 @@ import '../style/principal.css';
 import UserContext from '../components/UserContext';
 import axios from 'axios';
 
-const ProductCard = ({ product, addToCart, userEmail }) => (
-    <Card onClick={() => addToCart(product, userEmail)}
-        variant="outlined" 
-        sx={{ 
-            maxWidth: 300, 
-            maxHeight: 390, 
-            margin: '20px auto', 
-            width: '100%', 
-            height: '400px', 
-            borderRadius: '10px'
-        }}
-    >
-        <CardActionArea>
-            <CardContent>
-                <img src={product.imagen} alt={product.nombre} style={{ width: '250px', height: '250px', borderRadius: '10px'}} />
-                <Typography variant="h5" component="h2">
-                    {product.nombre}
-                </Typography>
-                <Typography variant="h5" component="p">
-                    ${product.precio}
-                </Typography>
-                <Typography variant="caption" component="p">
-                    {product.stock} en stock
-                </Typography>
-            </CardContent>
-        </CardActionArea>
-    </Card>
-);
+const ProductCard = ({ product, addToCart, userEmail }) => {
+    const [loading, setLoading] = useState(false);
+    const [added, setAdded] = useState(false);
+    const navigate = useNavigate(); 
+
+    const handleClick = async (e) => {
+        e.stopPropagation();
+        setLoading(true);
+        await addToCart(product, userEmail);
+        setLoading(false);
+        setAdded(true);
+        setTimeout(() => setAdded(false), 700);
+    };
+
+    return (
+        <Card
+            variant="outlined" 
+            sx={{ 
+                maxWidth: 300, 
+                maxHeight: 400, 
+                margin: '20px auto', 
+                width: '100%', 
+                height: '400px', 
+                borderRadius: '10px', 
+                display: 'flex', 
+                flexDirection: 'column', 
+                justifyContent: 'space-between' 
+            }}
+        >
+            <CardActionArea onClick={() => navigate(`/product/${product.id}`)} sx={{ flexGrow: 1 }}>
+                <CardContent>
+                    <img src={product.imagen} alt={product.nombre} style={{ width: '250px', height: '220px', borderRadius: '10px' }} />
+                    <Typography variant="h5" component="h2">
+                        {product.nombre}
+                    </Typography>
+                    <Typography variant="h5" component="p">
+                        ${product.precio}
+                    </Typography>
+                    <Typography variant="caption" component="p">
+                        {product.stock} en stock
+                    </Typography>
+                </CardContent>
+            </CardActionArea>
+            <CardActionArea onClick={handleClick} sx={{ display: 'flex', justifyContent: 'center', marginBottom: '10px' }}>
+                <Button
+                    onClick={handleClick}
+                    disabled={loading || added}
+                    fullWidth
+                >
+                    {added ? <CheckCircle color="success" /> : 'Añadir al carrito'}
+                </Button>
+            </CardActionArea>
+        </Card>
+    );
+};
 
 const Principal = ({ selectedCurrency, valorGeneral }) => {
     const { isLoggedIn } = useContext(AuthContext);

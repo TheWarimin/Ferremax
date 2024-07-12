@@ -5,14 +5,15 @@ import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../components/AuthContext';
 
 const Login = () => {
-    const { logIn, setUserEmail } = useContext(AuthContext);
+    const { logIn, setUserEmail, setIsEmployee, setEmployeeRole } = useContext(AuthContext);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const navigate = useNavigate();
+
     const handleSubmit = async (event) => {
         event.preventDefault();
-    
+
         try {
             const response = await fetch('http://localhost:8000/login/', {
                 method: 'POST',
@@ -23,7 +24,13 @@ const Login = () => {
             });
             const data = await response.json();
             if (response.ok) {
-                localStorage.setItem('token', data.token); 
+                localStorage.setItem('token', data.token);
+                localStorage.setItem('is_employee', data.is_employee.toString()); // Convertir a string
+                localStorage.setItem('employee_role', data.employee_role);
+                // Actualizar el estado del contexto
+                setIsEmployee(data.is_employee);
+                setEmployeeRole(data.employee_role);
+
                 const usersResponse = await fetch('http://localhost:8000/usuarios/', {
                     headers: {
                         'Authorization': `Token ${data.token}`,
@@ -32,6 +39,7 @@ const Login = () => {
                 const users = await usersResponse.json();
                 const user = users.find(user => user.email === email);
                 localStorage.setItem('user_id', user.id);
+
                 logIn();
                 setUserEmail(email);
                 navigate('/');
@@ -43,7 +51,6 @@ const Login = () => {
             setError(error.message);
         }
     };
-  
 
     return (
         <div className="login-container">
@@ -68,6 +75,6 @@ const Login = () => {
             </form>
         </div>
     );
+};
 
-}
 export default Login;

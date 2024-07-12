@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Table, TableHead, TableRow, TableCell, TableBody, TableContainer, Paper, TextField, TablePagination } from '@mui/material';
+import { Table, TableHead, TableRow, TableCell, TableBody, TableContainer, Paper, TextField, TablePagination, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
 
 const Usuarios = () => {
     const [usuarios, setUsuarios] = useState([]);
@@ -8,6 +8,8 @@ const Usuarios = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(5);
+    const [open, setOpen] = useState(false);
+    const [selectedUser, setSelectedUser] = useState({ id: null, username: '' });
 
     const getUsuarios = async () => {
         try {
@@ -38,8 +40,29 @@ const Usuarios = () => {
         setFilteredUsuarios(filtered);
     };
 
+    const handleDelete = async (userId) => {
+        try {
+            await axios.delete(`http://localhost:8000/usuarios/${userId}/`);
+            getUsuarios(); // Refresh the user list after deletion
+        } catch (error) {
+            console.error("Error deleting user: ", error);
+        } finally {
+            setOpen(false);
+        }
+    };
+
+    const handleClickOpen = (userId, username) => {
+        setSelectedUser({ id: userId, username });
+        setOpen(true);
+    };
+
+    const handleClose = () => {
+        setOpen(false);
+        setSelectedUser({ id: null, username: '' });
+    };
+
     return (
-        <div style={{ maxWidth: '80%', margin: 'auto' }}>
+        <div style={{ maxWidth: '60%', margin: 'auto' }}>
             <TextField
                 label="Buscar usuarios"
                 variant="outlined"
@@ -57,6 +80,7 @@ const Usuarios = () => {
                             <TableCell>Nombre de Usuario</TableCell>
                             <TableCell>Dirección</TableCell>
                             <TableCell>Teléfono</TableCell>
+                            <TableCell>Acciones</TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
@@ -67,6 +91,11 @@ const Usuarios = () => {
                                 <TableCell>{usuario.username}</TableCell>
                                 <TableCell>{usuario.direccion}</TableCell>
                                 <TableCell>{usuario.telefono}</TableCell>
+                                <TableCell>
+                                    <Button variant="contained" color="secondary" onClick={() => handleClickOpen(usuario.id, usuario.username)}>
+                                        Borrar
+                                    </Button>
+                                </TableCell>
                             </TableRow>
                         ))}
                     </TableBody>
@@ -84,6 +113,22 @@ const Usuarios = () => {
                     rowsPerPageOptions={[5, 10, 25, { label: 'All', value: -1 }]}
                 />
             </TableContainer>
+            <Dialog open={open} onClose={handleClose}>
+                <DialogTitle>Confirmar Eliminación</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        ¿Estás seguro que quieres eliminar a {selectedUser.username}?
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleClose} color="primary">
+                        Cancelar
+                    </Button>
+                    <Button onClick={() => handleDelete(selectedUser.id)} color="secondary">
+                        Eliminar
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </div>
     );
 };

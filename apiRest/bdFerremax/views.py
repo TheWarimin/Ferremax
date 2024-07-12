@@ -3,8 +3,8 @@ from rest_framework.decorators import action
 from django.contrib.auth import authenticate, login, logout
 from rest_framework.authtoken.models import Token
 from rest_framework import viewsets, generics
-from .serializer import WebpayTransactionSerializer, WebpayTransactionItemSerializer, MarcaSerializer, CategoriaSerializer, ProductoSerializer, CustomUserSerializer, CarritoSerializer, ProductoCarritoSerializer, ProductoSerializer
-from .models import Marca, Categoria, Producto, CustomUser, Carrito, ProductoCarrito, WebpayTransaction, WebpayTransactionItem
+from .serializer import PedidoSerializer, WebpayTransactionSerializer, WebpayTransactionItemSerializer, MarcaSerializer, CategoriaSerializer, ProductoSerializer, CustomUserSerializer, CarritoSerializer, ProductoCarritoSerializer, ProductoSerializer
+from .models import Marca, Categoria, Producto, CustomUser, Carrito, ProductoCarrito, WebpayTransaction, WebpayTransactionItem, Pedido
 from django.contrib.auth.models import Group
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
@@ -242,7 +242,12 @@ class LoginUserView(APIView):
         if user is not None:
             login(request, user)
             token, _ = Token.objects.get_or_create(user=user)
-            return Response({'token': token.key}, status=status.HTTP_200_OK)
+            user_data = {
+                'token': token.key,
+                'is_employee': user.is_employee,
+                'employee_role': user.employee_role,
+            }
+            return Response(user_data, status=status.HTTP_200_OK)
         else:
             return Response({'error': 'Invalid credentials'}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -275,3 +280,7 @@ class AddToCartView(APIView):
             producto_carrito.save()
 
         return Response({"detail": "Producto añadido al carrito."}, status=status.HTTP_200_OK)
+    
+class PedidoViewSet(viewsets.ModelViewSet):
+    queryset = Pedido.objects.all().order_by('fecha_creacion')
+    serializer_class = PedidoSerializer

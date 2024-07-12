@@ -6,17 +6,17 @@ export const useAuth = () => {
 };
 
 export const AuthProvider = ({ children }) => {
-  const [isLoggedIn, setIsLoggedIn] = useState(
-    () => localStorage.getItem('isLoggedIn') === 'true'
-  );
-  const [userEmail, setUserEmail] = useState(
-    () => localStorage.getItem('userEmail') || ''
-  );
+  const [isLoggedIn, setIsLoggedIn] = useState(() => localStorage.getItem('isLoggedIn') === 'true');
+  const [userEmail, setUserEmail] = useState(() => localStorage.getItem('userEmail') || '');
+  const [isEmployee, setIsEmployee] = useState(() => localStorage.getItem('is_employee') === 'true');
+  const [employeeRole, setEmployeeRole] = useState(() => localStorage.getItem('employee_role') || '');
 
   useEffect(() => {
     localStorage.setItem('isLoggedIn', isLoggedIn);
     localStorage.setItem('userEmail', userEmail);
-  }, [isLoggedIn, userEmail]);
+    localStorage.setItem('is_employee', isEmployee);
+    localStorage.setItem('employee_role', employeeRole);
+  }, [isLoggedIn, userEmail, isEmployee, employeeRole]);
 
   const logIn = () => {
     setIsLoggedIn(true);
@@ -25,12 +25,16 @@ export const AuthProvider = ({ children }) => {
   const logOut = () => {
     setIsLoggedIn(false);
     setUserEmail('');
-    localStorage.removeItem('token')
-    //localStorage.setItem('cart', JSON.stringify([]));
+    setIsEmployee(false);
+    setEmployeeRole('');
+    localStorage.removeItem('user_id');
+    localStorage.removeItem('token');
+    localStorage.removeItem('is_employee');
+    localStorage.removeItem('employee_role');
   };
 
   return (
-    <AuthContext.Provider value={{ isLoggedIn, logIn, logOut, userEmail, setUserEmail }}>
+    <AuthContext.Provider value={{ isLoggedIn, logIn, logOut, userEmail, setUserEmail, isEmployee, setIsEmployee, employeeRole, setEmployeeRole }}>
       {children}
     </AuthContext.Provider>
   );

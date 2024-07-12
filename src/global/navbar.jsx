@@ -12,6 +12,7 @@ import NotificationsOutlinedIcon from "@mui/icons-material/NotificationsOutlined
 import PersonOutlinedIcon from '@mui/icons-material/PersonOutlined';
 import ShoppingCartOutlinedIcon from '@mui/icons-material/ShoppingCartOutlined';
 import SearchIcon from "@mui/icons-material/Search";
+import PeopleIcon from '@mui/icons-material/People';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
@@ -26,13 +27,14 @@ const Navbar = ({ onCurrencyChange }) => {
   const navigate = useNavigate();
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedCurrency, setSelectedCurrency] = useState(localStorage.getItem('selectedCurrency') || 'Peso');
-  const { isLoggedIn, logOut, setUserEmail } = useContext(AuthContext);
+  const { isLoggedIn, logOut, userEmail, isEmployee } = useContext(AuthContext);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [results, setResults] = useState([]);
   const [productos, setProductos] = useState([]);
   const [tablaProductos, setTablaProductos] = useState([]);
   const [anchorEl, setAnchorEl] = useState(null);
+  const [users, setUsers] = useState([]);
 
   const peticionGet = async () => {
     try {
@@ -43,7 +45,7 @@ const Navbar = ({ onCurrencyChange }) => {
       console.error('Error al obtener productos:', error);
     }
   };
-
+  
   const handleSearch = () => {
     filtrar(searchQuery);
   };
@@ -86,8 +88,6 @@ const Navbar = ({ onCurrencyChange }) => {
   };
 
   const handleLogout = () => {
-    setUserEmail('');
-    localStorage.removeItem('user_id');
     logOut();
     navigate('/');
     handleClose(); 
@@ -143,6 +143,15 @@ const Navbar = ({ onCurrencyChange }) => {
     setAnchorEl(null);
   };
 
+  const irAUsuarios = () => {
+    navigate('/usuarios');
+  };
+
+  const handleResultClick = (productId) => {
+    navigate(`/product/${productId}`);
+    handleClosePopover();
+  };
+
   return (
     <Box>
       <Box display="flex" justifyContent="space-between" p={2}>
@@ -176,7 +185,7 @@ const Navbar = ({ onCurrencyChange }) => {
             <Box sx={{ maxHeight: '300px', overflowY: 'scroll'}}>
               <List>
                 {results.map((producto) => (
-                  <ListItem key={producto.id} button onClick={handleClosePopover}>
+                  <ListItem key={producto.id} button onClick={() => handleResultClick(producto.id)}>
                     <ListItemText primary={producto.nombre} />
                   </ListItem>
                 ))}
@@ -221,6 +230,11 @@ const Navbar = ({ onCurrencyChange }) => {
           <IconButton type="button" sx={{ p: 1 }}>
             <NotificationsOutlinedIcon />
           </IconButton>
+          {isLoggedIn && isEmployee && (
+            <IconButton type="button" sx={{ p: 1 }} onClick={irAUsuarios}>
+              <PeopleIcon />
+            </IconButton>
+          )}
           <IconButton type="button" sx={{ p: 1 }} onClick={handleButtonClick}>
             <PersonOutlinedIcon />
           </IconButton>

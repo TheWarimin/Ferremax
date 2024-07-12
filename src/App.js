@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { CssBaseline, ThemeProvider } from "@mui/material";
 import { Route, Routes, useLocation } from "react-router-dom";
 import { ColorModeContext, useMode } from "./theme";
-
 import Navbar from "./global/navbar";
 import SidebarComponent from "./global/Sidebar";
 import Principal from "./pages/principal";
@@ -20,9 +19,10 @@ import Usuarios from "./pages/administracion/usuarios";
 import Show from "./components/Show";
 import Edit from "./components/Edit";
 import Create from "./components/Create";
+import DetalleProducto from './pages/detalleproducto';
 import UserContext from '../src/components/UserContext';
 import { AuthProvider } from '../src/components/AuthContext';
-import Footer from "./global/Footer"; // Importa el nuevo componente de footer
+import Footer from "./global/Footer"; 
 
 function App() {
   const [userEmail, setUserEmail] = useState(null);
@@ -87,6 +87,7 @@ function App() {
                     <Route path="/create" element={<Create />} />
                     <Route path="/registro" element={<Registro />} />
                     <Route path="/login" element={<Login />} />
+                    <Route path="/product/:productId" element={<DetalleProducto />} /> 
                   </Routes>
                 </main>
               </div>

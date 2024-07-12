@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Table, TableHead, TableRow, TableCell, TableBody, TableContainer, Paper, TextField, TablePagination, Checkbox } from '@mui/material';
+import { Table, TableHead, TableRow, TableCell, TableBody, TableContainer, Paper, TextField, TablePagination, Checkbox, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
 
 const Empleados = () => {
     const [usuarios, setUsuarios] = useState([]);
@@ -8,6 +8,8 @@ const Empleados = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(5);
+    const [open, setOpen] = useState(false);
+    const [selectedUser, setSelectedUser] = useState(null);
 
     const getUsuarios = async () => {
         try {
@@ -60,6 +62,27 @@ const Empleados = () => {
         }
     };
 
+    const handleDelete = async (userId) => {
+        try {
+            await axios.delete(`http://localhost:8000/usuarios/${userId}/`);
+            getUsuarios();
+        } catch (error) {
+            console.error("Error deleting user: ", error);
+        } finally {
+            setOpen(false);
+        }
+    };
+
+    const handleClickOpen = (user) => {
+        setSelectedUser(user);
+        setOpen(true);
+    };
+
+    const handleClose = () => {
+        setOpen(false);
+        setSelectedUser(null);
+    };
+
     const rolesPermitidos = {
         bodeguero: 'Bodeguero',
         cajero: 'Cajero',
@@ -68,7 +91,7 @@ const Empleados = () => {
     };
 
     return (
-        <div style={{ maxWidth: '80%', margin: 'auto' }}>
+        <div style={{ maxWidth: '60%', margin: 'auto' }}>
             <TextField
                 label="Buscar empleados"
                 variant="outlined"
@@ -88,6 +111,7 @@ const Empleados = () => {
                             <TableCell>Teléfono</TableCell>
                             <TableCell>Empleado</TableCell>
                             <TableCell>Rol de Empleado</TableCell>
+                            <TableCell>Acciones</TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
@@ -120,6 +144,11 @@ const Empleados = () => {
                                         ))}
                                     </TextField>
                                 </TableCell>
+                                <TableCell>
+                                    <Button variant="contained" color="secondary" onClick={() => handleClickOpen(usuario)}>
+                                        Borrar
+                                    </Button>
+                                </TableCell>
                             </TableRow>
                         ))}
                     </TableBody>
@@ -137,6 +166,22 @@ const Empleados = () => {
                     rowsPerPageOptions={[5, 10, 25, { label: 'All', value: -1 }]}
                 />
             </TableContainer>
+            <Dialog open={open} onClose={handleClose}>
+                <DialogTitle>Confirmar Eliminación</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        ¿Estás seguro que quieres eliminar a {selectedUser?.username}?
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleClose} color="primary">
+                        Cancelar
+                    </Button>
+                    <Button onClick={() => handleDelete(selectedUser.id)} color="secondary">
+                        Eliminar
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </div>
     );
 };

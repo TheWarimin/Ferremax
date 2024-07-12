@@ -2,6 +2,7 @@ from django.db import models
 from django.utils.crypto import get_random_string
 from django.contrib.auth.models import AbstractUser, Group, Permission
 from django.utils.translation import gettext_lazy as _
+from django.conf import settings
 
 class Marca(models.Model):
     nombre = models.CharField(max_length=200)
@@ -23,7 +24,7 @@ class Producto(models.Model):
     precio = models.DecimalField(max_digits=10, decimal_places=2)
     stock = models.IntegerField()
     imagen = models.ImageField(upload_to='productos/', null=True, blank=True)
-
+    descripcion = models.TextField(null=True, blank=True) 
     def __str__(self):
         return self.nombre
 
@@ -103,6 +104,14 @@ class WebpayTransaction(models.Model):
     token = models.CharField(max_length=64, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        Pedido.objects.get_or_create(
+            usuario=self.user,
+            webpay_transaction=self,
+            defaults={'estado': 'preparando'}
+        )
+
 class WebpayTransactionItem(models.Model):
     transaction = models.ForeignKey(WebpayTransaction, related_name='items', on_delete=models.CASCADE)
     product = models.ForeignKey(Producto, on_delete=models.CASCADE)
@@ -123,3 +132,18 @@ class Empleado(models.Model):
 
     def __str__(self):
         return f"{self.user.email} - {self.get_role_display()}"
+
+class Pedido(models.Model):
+    ESTADOS_PEDIDO = (
+        ('preparando', 'Preparando'),
+        ('enviado', 'Enviado'),
+        ('entregado', 'Entregado'),
+    )
+
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    webpay_transaction = models.ForeignKey(WebpayTransaction, on_delete=models.CASCADE)
+    estado = models.CharField(max_length=10, choices=ESTADOS_PEDIDO, default='preparando')
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'Pedido {self.id} - {self.usuario.email}'
