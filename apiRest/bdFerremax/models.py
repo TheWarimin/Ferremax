@@ -24,7 +24,8 @@ class Producto(models.Model):
     precio = models.DecimalField(max_digits=10, decimal_places=2)
     stock = models.IntegerField()
     imagen = models.ImageField(upload_to='productos/', null=True, blank=True)
-    descripcion = models.TextField(null=True, blank=True) 
+    descripcion = models.TextField(null=True, blank=True)
+
     def __str__(self):
         return self.nombre
 
@@ -106,18 +107,12 @@ class WebpayTransaction(models.Model):
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
-        Pedido.objects.get_or_create(
-            usuario=self.user,
-            webpay_transaction=self,
-            defaults={'estado': 'preparando'}
-        )
 
 class WebpayTransactionItem(models.Model):
     transaction = models.ForeignKey(WebpayTransaction, related_name='items', on_delete=models.CASCADE)
     product = models.ForeignKey(Producto, on_delete=models.CASCADE)
     quantity = models.IntegerField()
 
-# Empleado roles
 EMPLOYEE_ROLES = (
     ('bodeguero', 'Bodeguero'),
     ('cajero', 'Cajero'),
@@ -133,17 +128,33 @@ class Empleado(models.Model):
     def __str__(self):
         return f"{self.user.email} - {self.get_role_display()}"
 
-class Pedido(models.Model):
-    ESTADOS_PEDIDO = (
-        ('preparando', 'Preparando'),
-        ('enviado', 'Enviado'),
-        ('entregado', 'Entregado'),
-    )
-
-    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    webpay_transaction = models.ForeignKey(WebpayTransaction, on_delete=models.CASCADE)
-    estado = models.CharField(max_length=10, choices=ESTADOS_PEDIDO, default='preparando')
-    fecha_creacion = models.DateTimeField(auto_now_add=True)
+class MetodoPago(models.Model):
+    nombre = models.CharField(max_length=100)
 
     def __str__(self):
-        return f'Pedido {self.id} - {self.usuario.email}'
+        return self.nombre
+
+class Sucursal(models.Model):
+    nombre = models.CharField(max_length=100)
+    direccion = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.nombre
+
+class Pedido(models.Model):
+    usuario = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    metodo_pago = models.ForeignKey(MetodoPago, on_delete=models.CASCADE)
+    envio = models.CharField(max_length=50, choices=(('domicilio', 'Domicilio'), ('sucursal', 'Sucursal')), default='domicilio')
+    sucursal = models.ForeignKey(Sucursal, null=True, blank=True, on_delete=models.SET_NULL)
+    direccion = models.CharField(max_length=200, null=True, blank=True)
+    telefono = models.CharField(max_length=20, null=True, blank=True)
+    fecha_pedido = models.DateTimeField(auto_now_add=True)
+    total = models.DecimalField(max_digits=10, decimal_places=2)
+    voucher = models.FileField(upload_to='vouchers/', null=True, blank=True)
+    productos = models.ManyToManyField(Producto, through='ProductoPedido')
+
+class ProductoPedido(models.Model):
+    pedido = models.ForeignKey(Pedido, on_delete=models.CASCADE)
+    producto = models.ForeignKey(Producto, on_delete=models.CASCADE)
+    cantidad = models.IntegerField()
+

@@ -1,18 +1,21 @@
 from django.urls import path, include
 from rest_framework import routers
 from bdFerremax import views
-from .views import PedidoViewSet, UserGroupsView, ValorArgView, ValorEuroView, ValorDolarView, WebpayTransactionViewSet, WebpayTransactionItemViewSet, AddToCartView, customUserViewSet, CustomUserCreate, MarcaViewSet, CategoriaViewSet, ProductoViewSet, CarritoViewSet, ProductoCarritoViewSet, WebpayView, WebpayReturnView
+from .views import SucursalViewSet, MetodoPagoViewSet, PedidoViewSet, UserGroupsView, ValorArgView, ValorEuroView, ValorDolarView, WebpayTransactionViewSet, WebpayTransactionItemViewSet, AddToCartView, customUserViewSet, CustomUserCreate, MarcaViewSet, CategoriaViewSet, ProductoViewSet, CarritoViewSet, ProductoCarritoViewSet, WebpayView, WebpayReturnView
 
 router = routers.DefaultRouter()
 router.register(r'marca', views.MarcaViewSet, 'marca')
 router.register(r'Categoria', views.CategoriaViewSet, 'Categoria')
 router.register(r'Producto', views.ProductoViewSet, 'Producto')
-router.register(r'carritos', CarritoViewSet)
 router.register(r'productos-carrito', ProductoCarritoViewSet)
+router.register(r'carritos', CarritoViewSet)
 router.register(r'usuarios', customUserViewSet)
-router.register(r'pedidos', views.PedidoViewSet)
+router.register(r'pedidos', PedidoViewSet)
+router.register(r'sucursales', views.SucursalViewSet, 'sucursal')
+router.register(r'metodos-pago', views.MetodoPagoViewSet, 'metodo-pago')
 router.register(r'WebpayItems', WebpayTransactionItemViewSet, 'WebpayItems')
 router.register(r'webpaytransactions', WebpayTransactionViewSet, 'webpaytransactions')
+
 
 urlpatterns = [
     path('', include(router.urls)),

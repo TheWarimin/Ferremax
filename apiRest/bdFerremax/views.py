@@ -3,8 +3,9 @@ from rest_framework.decorators import action
 from django.contrib.auth import authenticate, login, logout
 from rest_framework.authtoken.models import Token
 from rest_framework import viewsets, generics
-from .serializer import PedidoSerializer, WebpayTransactionSerializer, WebpayTransactionItemSerializer, MarcaSerializer, CategoriaSerializer, ProductoSerializer, CustomUserSerializer, CarritoSerializer, ProductoCarritoSerializer, ProductoSerializer
-from .models import Marca, Categoria, Producto, CustomUser, Carrito, ProductoCarrito, WebpayTransaction, WebpayTransactionItem, Pedido
+from .serializer import PedidoSerializer, PedidoSerializer, PedidoProductoSerializer, MetodoPagoSerializer, SucursalSerializer, PedidoSerializer, WebpayTransactionSerializer, WebpayTransactionItemSerializer, MarcaSerializer, CategoriaSerializer, ProductoSerializer, CustomUserSerializer, CarritoSerializer, ProductoCarritoSerializer, ProductoSerializer
+from .models import Marca, Categoria, Producto, CustomUser, Carrito, ProductoCarrito, WebpayTransaction, WebpayTransactionItem, Pedido, MetodoPago, Sucursal, ProductoPedido
+from .utils import generar_voucher
 from django.contrib.auth.models import Group
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
@@ -14,6 +15,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from transbank.webpay.webpay_plus.transaction import Transaction
 from django.shortcuts import get_object_or_404
 from datetime import datetime, timedelta
+from django.core.files import File
 from django.http import JsonResponse
 from django.views import View
 import requests
@@ -194,6 +196,17 @@ class CategoriaViewSet(viewsets.ModelViewSet):
 class customUserViewSet(viewsets.ModelViewSet):
     queryset = CustomUser.objects.all()
     serializer_class = CustomUserSerializer
+    
+    def get_object(self):
+        return self.request.user
+
+    def update(self, request, *args, **kwargs):
+        user = self.get_object()
+        serializer = self.get_serializer(user, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return Response(serializer.data)
+
 
 class ProductoViewSet(viewsets.ModelViewSet):
     queryset = Producto.objects.all()
@@ -219,10 +232,6 @@ class ProductoCarritoViewSet(viewsets.ModelViewSet):
             return Response({'status': 'cantidad actualizada'})
         else:
             return Response({'status': 'cantidad no proporcionada'}, status=status.HTTP_400_BAD_REQUEST)
-
-class ProductoViewSet(viewsets.ModelViewSet):
-    queryset = Producto.objects.all()
-    serializer_class = ProductoSerializer
 
 class CustomUserCreate(generics.CreateAPIView):
     queryset = CustomUser.objects.all()
@@ -281,6 +290,63 @@ class AddToCartView(APIView):
 
         return Response({"detail": "Producto añadido al carrito."}, status=status.HTTP_200_OK)
     
+class MetodoPagoViewSet(viewsets.ModelViewSet):
+    queryset = MetodoPago.objects.all()
+    serializer_class = MetodoPagoSerializer
+
+class SucursalViewSet(viewsets.ModelViewSet):
+    queryset = Sucursal.objects.all()
+    serializer_class = SucursalSerializer
+
 class PedidoViewSet(viewsets.ModelViewSet):
-    queryset = Pedido.objects.all().order_by('fecha_creacion')
+    queryset = Pedido.objects.all()
     serializer_class = PedidoSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        usuario = self.request.user
+        return Pedido.objects.filter(usuario=usuario)
+
+    def create(self, request, *args, **kwargs):
+        usuario = request.user
+        carrito = Carrito.objects.get(usuario=usuario)
+        productos_carrito = ProductoCarrito.objects.filter(carrito=carrito)
+
+        if not productos_carrito.exists():
+            return Response({'error': 'El carrito está vacío.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        metodo_pago = request.data.get('metodo_pago')
+        envio = request.data.get('envio')
+        sucursal = request.data.get('sucursal')
+        direccion = request.data.get('direccion')
+        telefono = request.data.get('telefono')
+        total_productos = sum([item.producto.precio * item.cantidad for item in productos_carrito])
+        costo_envio = 3000 if envio == 'domicilio' else 0
+        total = total_productos + costo_envio
+
+        pedido_data = {
+            'usuario': usuario.id,
+            'metodo_pago': metodo_pago,
+            'envio': envio,
+            'sucursal': sucursal,
+            'direccion': direccion if envio == 'domicilio' else None,
+            'telefono': telefono if envio == 'domicilio' else None,
+            'total': total,
+            'productos': [{'producto_id': item.producto.id, 'cantidad': item.cantidad} for item in productos_carrito]
+        }
+
+        serializer = self.get_serializer(data=pedido_data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        pedido = serializer.instance
+
+        for item in productos_carrito:
+            ProductoPedido.objects.create(pedido=pedido, producto=item.producto, cantidad=item.cantidad)
+
+        ruta_voucher = generar_voucher(pedido)
+        pedido.voucher = ruta_voucher
+        pedido.save()
+
+        productos_carrito.delete()
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)

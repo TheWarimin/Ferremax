@@ -10,6 +10,7 @@ import Carrito from "./pages/carrito";
 import Crud from "./pages/crud";
 import Registro from "./pages/registro";
 import Login from "./pages/login";
+import Perfil from "./pages/perfil";
 import Empleados from "./pages/administracion/empleados";
 import Envios from "./pages/administracion/envios";
 import Inventario from "./pages/administracion/inventario";
@@ -87,6 +88,7 @@ function App() {
                     <Route path="/create" element={<Create />} />
                     <Route path="/registro" element={<Registro />} />
                     <Route path="/login" element={<Login />} />
+                    <Route path="/perfil" element={<Perfil />} />
                     <Route path="/product/:productId" element={<DetalleProducto />} /> 
                   </Routes>
                 </main>

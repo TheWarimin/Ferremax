@@ -9,8 +9,10 @@ import Logo from '../Static/Ferremax_logo_trasparente.png';
 import LightModeOutlinedIcon from "@mui/icons-material/LightModeOutlined";
 import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
 import NotificationsOutlinedIcon from "@mui/icons-material/NotificationsOutlined";
+import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import PersonOutlinedIcon from '@mui/icons-material/PersonOutlined';
 import ShoppingCartOutlinedIcon from '@mui/icons-material/ShoppingCartOutlined';
+import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 import SearchIcon from "@mui/icons-material/Search";
 import PeopleIcon from '@mui/icons-material/People';
 import Button from '@mui/material/Button';
@@ -147,6 +149,10 @@ const Navbar = ({ onCurrencyChange }) => {
     navigate('/usuarios');
   };
 
+  const irAPerfil = () => {
+    navigate('/perfil');
+  };
+
   const handleResultClick = (productId) => {
     navigate(`/product/${productId}`);
     handleClosePopover();
@@ -227,17 +233,17 @@ const Navbar = ({ onCurrencyChange }) => {
           <IconButton type="button" sx={{ p: 1 }} onClick={irACarrito}>
             <ShoppingCartOutlinedIcon />
           </IconButton>
-          <IconButton type="button" sx={{ p: 1 }}>
-            <NotificationsOutlinedIcon />
+          <IconButton type="button" sx={{ p: 1 }} onClick={irAPerfil}>
+            <PersonOutlinedIcon />
+          </IconButton>
+          <IconButton type="button" sx={{ p: 1 }} onClick={handleButtonClick}>
+            <ExitToAppIcon />
           </IconButton>
           {isLoggedIn && isEmployee && (
             <IconButton type="button" sx={{ p: 1 }} onClick={irAUsuarios}>
-              <PeopleIcon />
+              <AdminPanelSettingsIcon />
             </IconButton>
           )}
-          <IconButton type="button" sx={{ p: 1 }} onClick={handleButtonClick}>
-            <PersonOutlinedIcon />
-          </IconButton>
           <IconButton type="button" sx={{ p: 1 }} onClick={colorMode.toggleColorMode}>
             {theme.palette.mode === 'dark' ? <LightModeOutlinedIcon /> : <DarkModeOutlinedIcon />}
           </IconButton>

@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from .models import Marca, Categoria, Producto, CustomUser, Carrito, ProductoCarrito, WebpayTransactionItem, WebpayTransaction, Empleado, EMPLOYEE_ROLES, Pedido
+from .models import Marca, Categoria, Producto, ProductoPedido, CustomUser, Carrito, ProductoCarrito, WebpayTransactionItem, WebpayTransaction, Empleado, Pedido, MetodoPago, Sucursal, EMPLOYEE_ROLES
 
 class WebpayTransactionItemSerializer(serializers.ModelSerializer):
     product_name = serializers.CharField(source='product.nombre')
@@ -59,11 +59,6 @@ class EmpleadoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Empleado
         fields = ['user', 'role']
-    
-class ProductoSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Producto
-        fields = '__all__'
 
 class ProductoCarritoSerializer(serializers.ModelSerializer):
     class Meta:
@@ -79,7 +74,43 @@ class CarritoSerializer(serializers.ModelSerializer):
         model = Carrito
         fields = ['id', 'usuario', 'productos']
 
+class MetodoPagoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MetodoPago
+        fields = '__all__'
+
+class SucursalSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Sucursal
+        fields = '__all__'
+
+class PedidoProductoSerializer(serializers.ModelSerializer):
+    producto_id = serializers.PrimaryKeyRelatedField(source='producto.id', read_only=True)  
+    nombre_producto = serializers.CharField(source='producto.nombre', read_only=True) 
+
+    class Meta:
+        model = ProductoPedido
+        fields = ('producto_id', 'nombre_producto', 'cantidad')
+
 class PedidoSerializer(serializers.ModelSerializer):
+    productos = PedidoProductoSerializer(source='productopedido_set', many=True, read_only=True)
+
     class Meta:
         model = Pedido
-        fields = '__all__'
+        fields = ['id', 'metodo_pago','fecha_pedido', 'envio', 'sucursal', 'direccion', 'telefono', 'total', 'usuario', 'productos','voucher']
+
+    def create(self, validated_data):
+        productos_data = validated_data.pop('productos', [])
+        pedido = Pedido.objects.create(**validated_data)
+        for producto_data in productos_data:
+            ProductoPedido.objects.create(
+                pedido=pedido,
+                producto=producto_data['producto'],
+                cantidad=producto_data['cantidad']
+            )
+        return pedido
+
+
+
+
+

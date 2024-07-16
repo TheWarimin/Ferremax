@@ -27,16 +27,24 @@ const Pedidos = () => {
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(5);
     const [transactionItems, setTransactionItems] = useState([]);
-    const [items, setItems] = useState([]);
     const [selectedUser, setSelectedUser] = useState(null);
     const [isTransactionModalOpen, setIsTransactionModalOpen] = useState(false);
     const [isUserModalOpen, setIsUserModalOpen] = useState(false);
 
+    const token = localStorage.getItem('token');
+
+    const axiosInstance = axios.create({
+        baseURL: 'http://127.0.0.1:8000',
+        headers: {
+            'Authorization': `Token ${token}`
+        }
+    });
+
     const getPedidos = async () => {
         try {
-            const response = await axios.get('http://127.0.0.1:8000/pedidos/');
+            const response = await axiosInstance.get('/pedidos/');
             if (response.status === 200) {
-                const sortedPedidos = response.data.sort((a, b) => new Date(b.fecha_creacion) - new Date(a.fecha_creacion));
+                const sortedPedidos = response.data.sort((a, b) => new Date(b.fecha_pedido) - new Date(a.fecha_pedido));
                 setPedidos(sortedPedidos);
                 setFilteredPedidos(sortedPedidos);
             }
@@ -47,7 +55,7 @@ const Pedidos = () => {
 
     const getUsuarios = async () => {
         try {
-            const response = await axios.get('http://127.0.0.1:8000/usuarios/');
+            const response = await axiosInstance.get('/usuarios/');
             if (response.status === 200) {
                 const usuariosMap = response.data.reduce((map, user) => {
                     map[user.id] = user;
@@ -79,19 +87,18 @@ const Pedidos = () => {
 
     const handleEstadoChange = async (id, estado) => {
         try {
-            await axios.patch(`http://127.0.0.1:8000/pedidos/${id}/`, { estado });
+            await axiosInstance.patch(`/pedidos/${id}/`, { estado });
             getPedidos();
         } catch (error) {
             console.error("Error updating order status: ", error);
         }
     };
 
-    const handleOpenTransactionModal = async (transactionId) => {
+    const handleOpenTransactionModal = async (pedidoId) => {
         try {
-            const response = await axios.get(`http://127.0.0.1:8000/WebpayItems/?transaction_id=${transactionId}`);
+            const response = await axiosInstance.get(`/pedidos/${pedidoId}/`);
             if (response.status === 200) {
-                setTransactionItems(response.data);
-                setItems(response.data); // Actualiza el estado de items
+                setTransactionItems(response.data.productos);
                 setIsTransactionModalOpen(true);
             }
         } catch (error) {
@@ -133,6 +140,7 @@ const Pedidos = () => {
                             <TableCell>Transacción</TableCell>
                             <TableCell>Estado</TableCell>
                             <TableCell>Fecha de Creación</TableCell>
+                            <TableCell>Voucher</TableCell> {/* Nueva columna para el voucher */}
                         </TableRow>
                     </TableHead>
                     <TableBody>
@@ -144,8 +152,8 @@ const Pedidos = () => {
                                     </Button>
                                 </TableCell>
                                 <TableCell>
-                                    <Button onClick={() => handleOpenTransactionModal(pedido.webpay_transaction)}>
-                                        {pedido.webpay_transaction}
+                                    <Button onClick={() => handleOpenTransactionModal(pedido.id)}>
+                                        Ver productos
                                     </Button>
                                 </TableCell>
                                 <TableCell>
@@ -158,7 +166,19 @@ const Pedidos = () => {
                                         <MenuItem value="entregado">Entregado</MenuItem>
                                     </Select>
                                 </TableCell>
-                                <TableCell>{formatDate(pedido.fecha_creacion)}</TableCell>
+                                <TableCell>{formatDate(pedido.fecha_pedido)}</TableCell>
+                                <TableCell>
+                                    {pedido.voucher && (
+                                        <a 
+                                            href={pedido.voucher} 
+                                            target="_blank" 
+                                            rel="noopener noreferrer"
+                                            style={{ textDecoration: 'none', color: '#3f51b5' }}
+                                        >
+                                            Ver Voucher
+                                        </a>
+                                    )}
+                                </TableCell>
                             </TableRow>
                         ))}
                     </TableBody>
@@ -177,24 +197,21 @@ const Pedidos = () => {
                 />
             </TableContainer>
 
-            {/* Modal para mostrar items de transacción */}
             <Dialog open={isTransactionModalOpen} onClose={() => setIsTransactionModalOpen(false)}>
-                <DialogTitle>Items de la Transacción</DialogTitle>
+                <DialogTitle>Productos del Pedido</DialogTitle>
                 <DialogContent>
                     <Table>
                         <TableHead>
                             <TableRow>
                                 <TableCell>Producto</TableCell>
-                                <TableCell>Precio</TableCell>
                                 <TableCell>Cantidad</TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>
-                            {transactionItems.map((item, index) => ( // Utiliza transactionItems
+                            {transactionItems.map((item, index) => (
                                 <TableRow key={index}>
-                                    <TableCell>{item.product_name}</TableCell>
-                                    <TableCell>{item.product_price}</TableCell>
-                                    <TableCell>{item.quantity}</TableCell>
+                                    <TableCell>{item.nombre_producto}</TableCell>
+                                    <TableCell>{item.cantidad}</TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>
@@ -205,7 +222,6 @@ const Pedidos = () => {
                 </DialogActions>
             </Dialog>
 
-            {/* Modal para mostrar datos del usuario */}
             <Dialog open={isUserModalOpen} onClose={() => setIsUserModalOpen(false)}>
                 <DialogTitle>Datos del Usuario</DialogTitle>
                 <DialogContent>

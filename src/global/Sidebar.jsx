@@ -41,8 +41,6 @@ const SidebarComponent = () => {
                     <MenuItem icon={<FaUserTie />} component={<Link to="/empleados" />}>Empleados</MenuItem>
                     <MenuItem icon={<FaWarehouse />} component={<Link to="/inventario" />}>Inventario</MenuItem>
                     <MenuItem icon={<FaShoppingCart />} component={<Link to="/pedidos" />}>Pedidos</MenuItem>
-                    <MenuItem icon={<FaTruck />} component={<Link to="/envios" />}>Envios</MenuItem>
-                    <MenuItem icon={<FaChartLine />} component={<Link to="/reportes" />}>Reportes</MenuItem>
                 </Menu>
             </Sidebar>
         </div>
