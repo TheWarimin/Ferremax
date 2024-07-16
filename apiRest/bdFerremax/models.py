@@ -142,6 +142,12 @@ class Sucursal(models.Model):
         return self.nombre
 
 class Pedido(models.Model):
+    ESTADO_CHOICES = (
+        ('preparando', 'Preparando'),
+        ('enviado', 'Enviado'),
+        ('entregado', 'Entregado'),
+    )
+
     usuario = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     metodo_pago = models.ForeignKey(MetodoPago, on_delete=models.CASCADE)
     envio = models.CharField(max_length=50, choices=(('domicilio', 'Domicilio'), ('sucursal', 'Sucursal')), default='domicilio')
@@ -152,9 +158,9 @@ class Pedido(models.Model):
     total = models.DecimalField(max_digits=10, decimal_places=2)
     voucher = models.FileField(upload_to='vouchers/', null=True, blank=True)
     productos = models.ManyToManyField(Producto, through='ProductoPedido')
+    estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='preparando')
 
 class ProductoPedido(models.Model):
     pedido = models.ForeignKey(Pedido, on_delete=models.CASCADE)
     producto = models.ForeignKey(Producto, on_delete=models.CASCADE)
     cantidad = models.IntegerField()
-

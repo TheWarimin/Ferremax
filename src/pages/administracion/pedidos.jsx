@@ -42,7 +42,7 @@ const Pedidos = () => {
 
     const getPedidos = async () => {
         try {
-            const response = await axiosInstance.get('/pedidos/');
+            const response = await axiosInstance.get('/admin-pedidos/');
             if (response.status === 200) {
                 const sortedPedidos = response.data.sort((a, b) => new Date(b.fecha_pedido) - new Date(a.fecha_pedido));
                 setPedidos(sortedPedidos);

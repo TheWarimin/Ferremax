@@ -113,7 +113,7 @@ const Perfil = () => {
       console.error("Hubo un error al obtener los datos del perfil:", error);
     });
 
-    axios.get('http://127.0.0.1:8000/pedidos/', {
+    axios.get('http://127.0.0.1:8000/user-pedidos/', {
       headers: {
         'Authorization': `Token ${token}`
       }

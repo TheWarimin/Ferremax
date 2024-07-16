@@ -350,3 +350,108 @@ class PedidoViewSet(viewsets.ModelViewSet):
         productos_carrito.delete()
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+class AdminPedidoViewSet(viewsets.ModelViewSet):
+    queryset = Pedido.objects.all()
+    serializer_class = PedidoSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return Pedido.objects.all()
+
+    def create(self, request, *args, **kwargs):
+        usuario = request.user
+        carrito = Carrito.objects.get(usuario=usuario)
+        productos_carrito = ProductoCarrito.objects.filter(carrito=carrito)
+
+        if not productos_carrito.exists():
+            return Response({'error': 'El carrito está vacío.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        metodo_pago = request.data.get('metodo_pago')
+        envio = request.data.get('envio')
+        sucursal = request.data.get('sucursal')
+        direccion = request.data.get('direccion')
+        telefono = request.data.get('telefono')
+        total_productos = sum([item.producto.precio * item.cantidad for item in productos_carrito])
+        costo_envio = 3000 if envio == 'domicilio' else 0
+        total = total_productos + costo_envio
+
+        pedido_data = {
+            'usuario': usuario.id,
+            'metodo_pago': metodo_pago,
+            'envio': envio,
+            'sucursal': sucursal,
+            'direccion': direccion if envio == 'domicilio' else None,
+            'telefono': telefono if envio == 'domicilio' else None,
+            'total': total,
+            'productos': [{'producto_id': item.producto.id, 'cantidad': item.cantidad} for item in productos_carrito]
+        }
+
+        serializer = self.get_serializer(data=pedido_data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        pedido = serializer.instance
+
+        for item in productos_carrito:
+            ProductoPedido.objects.create(pedido=pedido, producto=item.producto, cantidad=item.cantidad)
+
+        ruta_voucher = generar_voucher(pedido)
+        pedido.voucher = ruta_voucher
+        pedido.save()
+
+        productos_carrito.delete()
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+class UserPedidoViewSet(viewsets.ModelViewSet):
+    queryset = Pedido.objects.all()
+    serializer_class = PedidoSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        usuario = self.request.user
+        return Pedido.objects.filter(usuario=usuario)
+
+    def create(self, request, *args, **kwargs):
+        usuario = request.user
+        carrito = Carrito.objects.get(usuario=usuario)
+        productos_carrito = ProductoCarrito.objects.filter(carrito=carrito)
+
+        if not productos_carrito.exists():
+            return Response({'error': 'El carrito está vacío.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        metodo_pago = request.data.get('metodo_pago')
+        envio = request.data.get('envio')
+        sucursal = request.data.get('sucursal')
+        direccion = request.data.get('direccion')
+        telefono = request.data.get('telefono')
+        total_productos = sum([item.producto.precio * item.cantidad for item in productos_carrito])
+        costo_envio = 3000 if envio == 'domicilio' else 0
+        total = total_productos + costo_envio
+
+        pedido_data = {
+            'usuario': usuario.id,
+            'metodo_pago': metodo_pago,
+            'envio': envio,
+            'sucursal': sucursal,
+            'direccion': direccion if envio == 'domicilio' else None,
+            'telefono': telefono if envio == 'domicilio' else None,
+            'total': total,
+            'productos': [{'producto_id': item.producto.id, 'cantidad': item.cantidad} for item in productos_carrito]
+        }
+
+        serializer = self.get_serializer(data=pedido_data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        pedido = serializer.instance
+
+        for item in productos_carrito:
+            ProductoPedido.objects.create(pedido=pedido, producto=item.producto, cantidad=item.cantidad)
+
+        ruta_voucher = generar_voucher(pedido)
+        pedido.voucher = ruta_voucher
+        pedido.save()
+
+        productos_carrito.delete()
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
